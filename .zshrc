@@ -1,4 +1,5 @@
 export PATH
+export TERM=xterm
 
 # Oh-My-Zsh
 export ZSH="$HOME/.oh-my-zsh"
