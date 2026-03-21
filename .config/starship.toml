@@ -1,0 +1,145 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = true
+
+palette = "carbonfox"
+
+format = "[╭─](comment)$username$hostname$directory$git_branch$git_status$git_commit$nodejs$rust$python$golang$lua$docker_context$package$cmd_duration$jobs$memory_usage\n[╰─](comment)$character"
+
+continuation_prompt = '▶▶ '
+
+command_timeout = 50
+
+[aws]
+disabled = true
+
+[c]
+disabled = true
+
+[palettes.carbonfox]
+bg0      = "#111111"
+bg1      = "#161616"
+bg2      = "#1c1c1c"
+bg3      = "#222222"
+bg4      = "#2e2e2e"
+fg0      = "#f8faff"
+fg1      = "#f2f4f8"
+fg2      = "#d9dbe0"
+fg3      = "#b0b2b6"
+comment  = "#6e6f70"
+red      = "#EE5396"
+red_brt  = "#F47EB0"
+green    = "#25be6a"
+green_brt= "#4DD68A"
+yellow   = "#08BDBA"
+blue     = "#78A9FF"
+blue_brt = "#9ABFFF"
+magenta  = "#BE95FF"
+mag_brt  = "#CEB0FF"
+cyan     = "#33B1FF"
+cyan_brt = "#66CBFF"
+white    = "#dfdfe0"
+orange   = "#3DDBD9"
+pink     = "#FF7EB6"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol   = "[❯](bold red)"
+vimcmd_symbol  = "[❮](bold magenta)"
+
+[directory]
+style            = "bold blue_brt"
+read_only        = " 󰌾"
+read_only_style  = "red"
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+style  = "bold magenta"
+symbol = ""
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style     = "bold red"
+ahead     = "⇡${count} "
+behind    = "⇣${count} "
+diverged  = "⇕⇡${ahead_count}⇣${behind_count} "
+staged    = "[+${count}](green) "
+modified  = "[~${count}](yellow) "
+untracked = "[?${count}](comment) "
+deleted   = "[-${count}](red) "
+conflicted= "[=${count}](red_brt) "
+
+[git_commit]
+style  = "bold green"
+format = "[\\($hash$tag\\)]($style) "
+
+[nodejs]
+style  = "bold green"
+symbol = ""
+
+[rust]
+style  = "bold orange"
+symbol = ""
+
+[python]
+style         = "bold yellow"
+symbol        = ""
+pyenv_version_name = true
+
+[golang]
+style  = "bold cyan"
+symbol = ""
+
+[lua]
+style  = "bold blue"
+symbol = ""
+
+[docker_context]
+style  = "bold cyan_brt"
+symbol = ""
+
+[cmd_duration]
+style          = "bold comment"
+min_time       = 2_000
+format         = "[ $duration]($style) "
+
+[jobs]
+style  = "bold orange"
+symbol = ""
+number_threshold = 1
+
+[memory_usage]
+style    = "bold comment"
+symbol   = "󰍛 "
+disabled = false
+threshold = 75
+format   = "[$symbol${ram_pct}]($style) "
+
+[time]
+style    = "comment"
+disabled = false
+format   = "[$time]($style) "
+time_format = "%H:%M"
+
+[username]
+style_user  = "bold cyan"
+style_root  = "bold red"
+format      = "[$user]($style)[@](comment)"
+show_always = false
+
+[hostname]
+style  = "bold blue"
+format = "[$hostname]($style) "
+
+[localip]
+disabled = true
+style    = "comment"
+
+[package]
+style  = "bold pink"
+symbol = "󰏗 "
+
+[env_var.VIRTUAL_ENV]
+style  = "bold yellow"
+format = "[venv:$env_value]($style) "
