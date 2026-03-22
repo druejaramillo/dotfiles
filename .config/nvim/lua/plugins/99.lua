@@ -51,7 +51,7 @@ return {
 		opts = {
 			spec = {
 				{
-					mode = { "n", "v" },
+					mode = { "n", "x" },
 					{
 						"<leader>9",
 						group = "99",
