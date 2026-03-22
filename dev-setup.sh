@@ -7,7 +7,6 @@ set -euo pipefail
 DOTFILES_REPO="https://github.com/druejaramillo/dotfiles.git"
 DOTFILES_DIR="$HOME/.dotfiles"
 DOTFILES_BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-FONT_NAME="FiraCode"
 NVM_VERSION="v0.40.3"
 
 #######################################
@@ -63,56 +62,44 @@ ensure_local_bin_on_path() {
 }
 
 #######################################
-# Homebrew
+# macOS: Homebrew only
 #######################################
-install_homebrew_if_needed() {
+install_homebrew_if_needed_macos() {
   if have brew; then
     return
   fi
 
-  log "Installing Homebrew"
+  log "Installing Homebrew on macOS"
   NONINTERACTIVE=1 /bin/bash -c \
     "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-  if [[ "$OS" == "macos" ]]; then
-    if [[ -x /opt/homebrew/bin/brew ]]; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-      append_line_if_missing 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile"
-    elif [[ -x /usr/local/bin/brew ]]; then
-      eval "$(/usr/local/bin/brew shellenv)"
-      append_line_if_missing 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zprofile"
-    fi
-  else
-    if [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-      eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-      append_line_if_missing 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' "$HOME/.zprofile"
-    elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then
-      eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
-      append_line_if_missing 'eval "$("$HOME/.linuxbrew/bin/brew" shellenv)' "$HOME/.zprofile"
-    fi
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    append_line_if_missing 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.zprofile"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    append_line_if_missing 'eval "$(/usr/local/bin/brew shellenv)"' "$HOME/.zprofile"
   fi
 }
 
 #######################################
-# Package installation
+# Linux packages
 #######################################
-update_system_packages() {
-  if [[ "$OS" == "linux" ]]; then
-    case "$PKG_MGR" in
-      apt)
-        sudo_if_needed apt-get update
-        ;;
-      dnf)
-        sudo_if_needed dnf makecache
-        ;;
-      pacman)
-        sudo_if_needed pacman -Sy --noconfirm
-        ;;
-      zypper)
-        sudo_if_needed zypper refresh
-        ;;
-    esac
-  fi
+update_system_packages_linux() {
+  case "$PKG_MGR" in
+    apt)
+      sudo_if_needed apt-get update
+      ;;
+    dnf)
+      sudo_if_needed dnf makecache
+      ;;
+    pacman)
+      sudo_if_needed pacman -Sy --noconfirm
+      ;;
+    zypper)
+      sudo_if_needed zypper refresh
+      ;;
+  esac
 }
 
 install_base_packages_linux() {
@@ -149,22 +136,12 @@ install_base_packages_linux() {
   esac
 }
 
-install_base_packages_macos() {
-  log "Installing base packages via Homebrew"
-  brew update
-
-  brew install \
-    zsh git starship lazygit ripgrep neovim python postgresql@16 \
-    luarocks tree-sitter lazydocker
-
-  # Docker Desktop on macOS
-  if ! have docker; then
-    brew install --cask docker
+install_starship_linux() {
+  if have starship; then
+    return
   fi
-
-  # FiraCode Nerd Font
-  brew tap homebrew/cask-fonts || true
-  brew install --cask font-fira-code-nerd-font || true
+  log "Installing Starship"
+  curl -fsSL https://starship.rs/install.sh | sh -s -- -y
 }
 
 install_docker_linux() {
@@ -174,17 +151,24 @@ install_docker_linux() {
   fi
 
   log "Installing Docker on Linux"
+
   case "$PKG_MGR" in
     apt)
       sudo_if_needed apt-get install -y ca-certificates curl gnupg
       sudo_if_needed install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/"$(. /etc/os-release; echo "$ID")"/gpg \
-        | sudo_if_needed gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+      if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+        curl -fsSL "https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg" \
+          | sudo_if_needed gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      fi
+
       sudo_if_needed chmod a+r /etc/apt/keyrings/docker.gpg
+
       echo \
         "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
         $(. /etc/os-release; echo "${VERSION_CODENAME:-$UBUNTU_CODENAME}") stable" \
         | sudo_if_needed tee /etc/apt/sources.list.d/docker.list >/dev/null
+
       sudo_if_needed apt-get update
       sudo_if_needed apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       ;;
@@ -203,77 +187,10 @@ install_docker_linux() {
 
   sudo_if_needed systemctl enable docker || true
   sudo_if_needed systemctl start docker || true
-  sudo_if_needed usermod -aG docker "$USER" || true
-  warn "You may need to log out/in for Docker group membership to take effect."
-}
 
-install_starship_linux() {
-  if have starship; then
-    return
-  fi
-  log "Installing Starship"
-  curl -fsSL https://starship.rs/install.sh | sh -s -- -y
-}
-
-install_oh_my_zsh() {
-  if [[ -d "$HOME/.oh-my-zsh" ]]; then
-    log "Oh My Zsh already installed"
-    return
-  fi
-
-  log "Installing Oh My Zsh"
-  RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-}
-
-install_nvm_node() {
-  if [[ ! -d "$HOME/.nvm" ]]; then
-    log "Installing nvm"
-    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
-  fi
-
-  export NVM_DIR="$HOME/.nvm"
-  # shellcheck disable=SC1090
-  [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
-
-  if ! have nvm; then
-    err "nvm failed to load"
-    exit 1
-  fi
-
-  log "Installing latest Node.js via nvm"
-  nvm install --lts
-  nvm alias default 'lts/*'
-  nvm use default
-
-  # Ensure shell init
-  append_line_if_missing 'export NVM_DIR="$HOME/.nvm"' "$HOME/.zshrc"
-  append_line_if_missing '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' "$HOME/.zshrc"
-  append_line_if_missing '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' "$HOME/.zshrc"
-}
-
-install_tree_sitter_cli() {
-  if have tree-sitter; then
-    log "tree-sitter already installed"
-    return
-  fi
-
-  log "Installing tree-sitter-cli globally via npm"
-  npm install -g tree-sitter-cli
-}
-
-install_opencode() {
-  if have opencode; then
-    log "OpenCode already installed"
-    return
-  fi
-
-  log "Installing OpenCode"
-  if [[ "$OS" == "macos" ]] && have brew; then
-    brew install anomalyco/tap/opencode
-  else
-    curl -fsSL https://opencode.ai/install | bash
-    ensure_local_bin_on_path
+  if [[ "${EUID}" -ne 0 ]]; then
+    sudo_if_needed usermod -aG docker "$USER" || true
+    warn "You may need to log out and back in for Docker group membership to take effect."
   fi
 }
 
@@ -282,12 +199,8 @@ install_lazygit_linux() {
     return
   fi
 
-  if have brew; then
-    brew install lazygit
-    return
-  fi
+  log "Installing lazygit from GitHub releases"
 
-  log "Installing latest lazygit from GitHub releases"
   local version tmpdir arch
   version="$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')"
 
@@ -310,15 +223,10 @@ install_lazydocker_linux() {
     return
   fi
 
-  if have brew; then
-    brew install lazydocker
-    return
-  fi
-
-  log "Installing lazydocker via upstream installer"
+  log "Installing lazydocker"
+  ensure_local_bin_on_path
   DIR="$HOME/.local/bin" curl -fsSL \
     https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
-  ensure_local_bin_on_path
 }
 
 install_firacode_nerd_font_linux() {
@@ -326,7 +234,7 @@ install_firacode_nerd_font_linux() {
   font_dir="$HOME/.local/share/fonts/FiraCode"
   mkdir -p "$font_dir"
 
-  if find "$font_dir" -iname "*Nerd*" -o -iname "*FiraCode*" | grep -q . 2>/dev/null; then
+  if find "$font_dir" \( -iname "*Nerd*" -o -iname "*FiraCode*" \) | grep -q . 2>/dev/null; then
     log "FiraCode Nerd Font appears to already be installed"
     return
   fi
@@ -337,10 +245,90 @@ install_firacode_nerd_font_linux() {
   curl -fsSL -o "$zip_path" \
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
   unzip -o "$zip_path" -d "$font_dir" >/dev/null
+
   if have fc-cache; then
     fc-cache -fv "$HOME/.local/share/fonts" >/dev/null || true
   fi
+
   rm -rf "$tmpdir"
+}
+
+#######################################
+# macOS packages
+#######################################
+install_base_packages_macos() {
+  log "Installing packages via Homebrew"
+  brew update
+
+  brew install \
+    zsh git starship lazygit lazydocker ripgrep neovim python \
+    postgresql@16 luarocks
+
+  if ! have docker; then
+    brew install --cask docker
+  fi
+
+  brew tap homebrew/cask-fonts || true
+  brew install --cask font-fira-code-nerd-font || true
+}
+
+#######################################
+# Shared installs
+#######################################
+install_oh_my_zsh() {
+  if [[ -d "$HOME/.oh-my-zsh" ]]; then
+    log "Oh My Zsh already installed"
+    return
+  fi
+
+  log "Installing Oh My Zsh"
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+}
+
+install_nvm_node() {
+  if [[ ! -d "$HOME/.nvm" ]]; then
+    log "Installing nvm"
+    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
+  fi
+
+  export NVM_DIR="$HOME/.nvm"
+  # shellcheck disable=SC1090
+  [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
+
+  if ! command -v nvm >/dev/null 2>&1; then
+    err "nvm failed to load"
+    exit 1
+  fi
+
+  log "Installing latest LTS Node.js"
+  nvm install --lts
+  nvm alias default 'lts/*'
+  nvm use default
+
+  append_line_if_missing 'export NVM_DIR="$HOME/.nvm"' "$HOME/.zshrc"
+  append_line_if_missing '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' "$HOME/.zshrc"
+  append_line_if_missing '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' "$HOME/.zshrc"
+}
+
+install_tree_sitter_cli() {
+  if have tree-sitter; then
+    return
+  fi
+
+  log "Installing tree-sitter-cli"
+  npm install -g tree-sitter-cli
+}
+
+install_opencode() {
+  if have opencode; then
+    log "OpenCode already installed"
+    return
+  fi
+
+  log "Installing OpenCode"
+  ensure_local_bin_on_path
+  curl -fsSL https://opencode.ai/install | bash
 }
 
 change_default_shell_to_zsh() {
@@ -374,7 +362,6 @@ clone_dotfiles() {
 
   local git_bin
   git_bin="$(command -v git)"
-  alias dotfiles="$git_bin --git-dir=$DOTFILES_DIR/ --work-tree=$HOME"
 
   log "Checking out dotfiles"
   if ! "$git_bin" --git-dir="$DOTFILES_DIR/" --work-tree="$HOME" checkout -f; then
@@ -398,26 +385,28 @@ clone_dotfiles() {
 }
 
 setup_postgres() {
-  log "Setting up PostgreSQL service hints"
+  log "Starting PostgreSQL where possible"
 
   if [[ "$OS" == "macos" ]]; then
-    if have brew; then
-      brew services start postgresql@16 || warn "Could not start PostgreSQL automatically"
-    fi
-  else
-    case "$PKG_MGR" in
-      apt|dnf|zypper)
-        sudo_if_needed systemctl enable postgresql || true
-        sudo_if_needed systemctl start postgresql || true
-        ;;
-      pacman)
-        warn "On Arch, initialize the DB first if needed:"
-        warn "  sudo -iu postgres initdb -D /var/lib/postgres/data"
-        warn "Then start:"
-        warn "  sudo systemctl enable --now postgresql"
-        ;;
-    esac
+    brew services start postgresql@16 || warn "Could not start PostgreSQL automatically"
+    return
   fi
+
+  case "$PKG_MGR" in
+    apt)
+      sudo_if_needed systemctl enable postgresql || true
+      sudo_if_needed systemctl start postgresql || true
+      ;;
+    dnf|zypper)
+      sudo_if_needed systemctl enable postgresql || true
+      sudo_if_needed systemctl start postgresql || true
+      ;;
+    pacman)
+      warn "On Arch, initialize PostgreSQL manually if needed:"
+      warn "  sudo -iu postgres initdb -D /var/lib/postgres/data"
+      warn "  sudo systemctl enable --now postgresql"
+      ;;
+  esac
 }
 
 print_summary() {
@@ -426,7 +415,7 @@ print_summary() {
 Done.
 
 Installed / configured:
-  - zsh + default shell switch
+  - zsh
   - Oh My Zsh
   - Starship
   - git
@@ -446,11 +435,10 @@ Installed / configured:
   - bare dotfiles checkout
 
 Recommended next steps:
-  1. Log out and back in (important for Docker group + shell change)
-  2. Open Docker/Desktop once on macOS
-  3. Start a new zsh session:
+  1. Start a new shell:
        exec zsh
-  4. Verify:
+  2. If Docker was newly installed on Linux, log out/in for docker group access
+  3. Verify:
        zsh --version
        starship --version
        git --version
@@ -479,16 +467,15 @@ main() {
 
   if [[ "$OS" == "linux" ]]; then
     detect_linux_pkg_mgr
-    update_system_packages
+    update_system_packages_linux
     install_base_packages_linux
-    install_homebrew_if_needed
     install_starship_linux
     install_docker_linux
     install_lazygit_linux
     install_lazydocker_linux
     install_firacode_nerd_font_linux
   else
-    install_homebrew_if_needed
+    install_homebrew_if_needed_macos
     install_base_packages_macos
   fi
 
