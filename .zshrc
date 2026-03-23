@@ -15,6 +15,8 @@ alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias vim='nvim'
 export EDITOR='nvim'
 
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+
 # Docker alias commands
 alias d='docker'
 alias dc='docker compose'
@@ -39,7 +41,7 @@ export PYTHONPATH
 PATH="/Library/Frameworks/Python.framework/Versions/3.11/bin:${PATH}"
 export PATH
 
-export PATH="/Users/user/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 export PATH="/usr/local/opt/python@3.12/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
 alias python3="/usr/local/bin/python3.12"
