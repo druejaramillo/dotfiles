@@ -38,7 +38,8 @@ detect_os() {
 }
 
 detect_linux_pkg_mgr() {
-  if have apt-get; then PKG_MGR="apt"
+  if have apt; then PKG_MGR="apt"
+  elif have apt-get; then PKG_MGR="apt-get"
   elif have dnf; then PKG_MGR="dnf"
   elif have pacman; then PKG_MGR="pacman"
   elif have zypper; then PKG_MGR="zypper"
@@ -87,8 +88,8 @@ install_homebrew_if_needed_macos() {
 #######################################
 update_system_packages_linux() {
   case "$PKG_MGR" in
-    apt)
-      sudo_if_needed apt-get update
+    apt|apt-get)
+      sudo_if_needed apt update
       ;;
     dnf)
       sudo_if_needed dnf makecache
@@ -106,8 +107,8 @@ install_base_packages_linux() {
   log "Installing base packages via $PKG_MGR"
 
   case "$PKG_MGR" in
-    apt)
-      sudo_if_needed apt-get install -y \
+    apt|apt-get)
+      sudo_if_needed "$PKG_MGR" install -y \
         zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
         build-essential ripgrep neovim python3 python3-pip python3-venv \
         postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
@@ -153,8 +154,8 @@ install_docker_linux() {
   log "Installing Docker on Linux"
 
   case "$PKG_MGR" in
-    apt)
-      sudo_if_needed apt-get install -y ca-certificates curl gnupg
+    apt|apt-get)
+      sudo_if_needed "$PKG_MGR" install -y ca-certificates curl gnupg
       sudo_if_needed install -m 0755 -d /etc/apt/keyrings
 
       if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
@@ -169,8 +170,8 @@ install_docker_linux() {
         $(. /etc/os-release; echo "${VERSION_CODENAME:-$UBUNTU_CODENAME}") stable" \
         | sudo_if_needed tee /etc/apt/sources.list.d/docker.list >/dev/null
 
-      sudo_if_needed apt-get update
-      sudo_if_needed apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      sudo_if_needed "$PKG_MGR" update
+      sudo_if_needed "$PKG_MGR" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       ;;
     dnf)
       sudo_if_needed dnf -y install dnf-plugins-core
@@ -393,7 +394,7 @@ setup_postgres() {
   fi
 
   case "$PKG_MGR" in
-    apt)
+    apt|apt-get)
       sudo_if_needed systemctl enable postgresql || true
       sudo_if_needed systemctl start postgresql || true
       ;;
