@@ -6,7 +6,8 @@ return {
 		linters_by_ft = {
 			fish = { "fish" },
 			python = { "ruff" },
-			go = { "golangci-lint" },
+			-- we use golangci-lint-langserver to run linting instead
+			-- go = { "golangci-lint" },
 			html = { "htmlhint" },
 			json = { "jsonlint" },
 			lua = { "luacheck" },
@@ -68,7 +69,7 @@ return {
 			names = vim.tbl_filter(function(name)
 				local linter = lint.linters[name]
 				if not linter then
-					LazyVim.warn("Linter not found: " .. name, { title = "nvim-lint" })
+					print("Linter not found: " .. name)
 				end
 				return linter and not (type(linter) == "table" and linter.condition and not linter.condition(ctx))
 			end, names)
