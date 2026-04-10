@@ -72,6 +72,88 @@ return {
 				timeout_ms = nil,
 			},
 
+			keys = {
+				{
+					"<leader>cl",
+					function()
+						vim.cmd("LspInfo")
+					end,
+					desc = "Lsp Info",
+				},
+				{ "gd", vim.lsp.buf.definition, desc = "Goto Definition" },
+				{ "gr", vim.lsp.buf.references, desc = "References" },
+				{ "gI", vim.lsp.buf.implementation, desc = "Goto Implementation" },
+				{ "gy", vim.lsp.buf.type_definition, desc = "Goto Type Definition" },
+				{ "gD", vim.lsp.buf.declaration, desc = "Goto Declaration" },
+				{ "K", vim.lsp.buf.hover, desc = "Hover" },
+				{ "gK", vim.lsp.buf.signature_help, desc = "Signature Help" },
+				{
+					"<C-k>",
+					vim.lsp.buf.signature_help,
+					mode = "i",
+					desc = "Signature Help",
+				},
+				{
+					"<leader>ca",
+					vim.lsp.buf.code_action,
+					mode = { "n", "x" },
+					desc = "Code Action",
+				},
+				{
+					"<leader>cc",
+					vim.lsp.codelens.run,
+					mode = { "n", "x" },
+					desc = "Run Codelens",
+				},
+				{
+					"<leader>cC",
+					vim.lsp.codelens.refresh,
+					desc = "Refresh Codelens",
+				},
+				{
+					"<leader>cR",
+					function()
+						Snacks.rename.rename_file()
+					end,
+					desc = "Rename File",
+				},
+				{ "<leader>cr", vim.lsp.buf.rename, desc = "Rename Symbol" },
+				{ "<leader>cA", source_action, desc = "Source Action" },
+				{
+					"]]",
+					function()
+						Snacks.words.jump(vim.v.count1)
+					end,
+					desc = "Next Reference",
+				},
+				{
+					"[[",
+					function()
+						Snacks.words.jump(-vim.v.count1)
+					end,
+					desc = "Prev Reference",
+				},
+				{
+					"<A-n>",
+					function()
+						Snacks.words.jump(vim.v.count1, true)
+					end,
+					desc = "Next Reference",
+				},
+				{
+					"<A-p>",
+					function()
+						Snacks.words.jump(-vim.v.count1, true)
+					end,
+					desc = "Prev Reference",
+				},
+				{
+					"<leader>co",
+					organize_imports,
+					desc = "Organize Imports",
+				},
+			},
+
 			servers = {
 				["*"] = {
 					capabilities = {
@@ -82,111 +164,7 @@ return {
 							},
 						},
 					},
-					keys = {
-						{
-							"<leader>cl",
-							function()
-								vim.cmd("LspInfo")
-							end,
-							desc = "Lsp Info",
-						},
-						{
-							"gd",
-							vim.lsp.buf.definition,
-							desc = "Goto Definition",
-						},
-						{ "gr", vim.lsp.buf.references, desc = "References" },
-						{
-							"gI",
-							vim.lsp.buf.implementation,
-							desc = "Goto Implementation",
-						},
-						{
-							"gy",
-							vim.lsp.buf.type_definition,
-							desc = "Goto Type Definition",
-						},
-						{
-							"gD",
-							vim.lsp.buf.declaration,
-							desc = "Goto Declaration",
-						},
-						{ "K", vim.lsp.buf.hover, desc = "Hover" },
-						{
-							"gK",
-							vim.lsp.buf.signature_help,
-							desc = "Signature Help",
-						},
-						{
-							"<C-k>",
-							vim.lsp.buf.signature_help,
-							mode = "i",
-							desc = "Signature Help",
-						},
-						{
-							"<leader>ca",
-							vim.lsp.buf.code_action,
-							mode = { "n", "x" },
-							desc = "Code Action",
-						},
-						{
-							"<leader>cc",
-							vim.lsp.codelens.run,
-							mode = { "n", "x" },
-							desc = "Run Codelens",
-						},
-						{
-							"<leader>cC",
-							vim.lsp.codelens.refresh,
-							mode = "n",
-							desc = "Refresh Codelens",
-						},
-						{
-							"<leader>cR",
-							function()
-								Snacks.rename.rename_file()
-							end,
-							desc = "Rename File",
-						},
-						{ "<leader>cr", vim.lsp.buf.rename, desc = "Rename Symbol" },
-						{ "<leader>cA", source_action, desc = "Source Action" },
-						{
-							"]]",
-							function()
-								Snacks.words.jump(vim.v.count1)
-							end,
-							desc = "Next Reference",
-						},
-						{
-							"[[",
-							function()
-								Snacks.words.jump(-vim.v.count1)
-							end,
-							desc = "Prev Reference",
-						},
-						{
-							"<A-n>",
-							function()
-								Snacks.words.jump(vim.v.count1, true)
-							end,
-							desc = "Next Reference",
-						},
-						{
-							"<A-p>",
-							function()
-								Snacks.words.jump(-vim.v.count1, true)
-							end,
-							desc = "Prev Reference",
-						},
-						{
-							"<leader>co",
-							organize_imports,
-							desc = "Organize Imports",
-						},
-					},
 				},
-
-				stylua = { enabled = false },
 
 				lua_ls = {
 					settings = {
@@ -251,15 +229,28 @@ return {
 					mason = false,
 					cmd = { "golangci-lint-langserver" },
 					filetypes = { "go", "gomod" },
-					root_markers = { ".git", "go.mod" },
+					root_markers = {
+						".golangci.yml",
+						".golangci.yaml",
+						".golangci.toml",
+						".golangci.json",
+						"go.work",
+						"go.mod",
+						".git",
+					},
 					init_options = {
 						command = {
 							"golangci-lint",
 							"run",
-							"--output.json.path",
-							"stdout",
+							"--output.text.path=",
+							"--output.tab.path=",
+							"--output.html.path=",
+							"--output.checkstyle.path=",
+							"--output.junit-xml.path=",
+							"--output.teamcity.path=",
+							"--output.sarif.path=",
 							"--show-stats=false",
-							"--issues-exit-code=1",
+							"--output.json.path=stdout",
 						},
 					},
 				},
@@ -291,12 +282,20 @@ return {
 			return false
 		end
 
+		local group = vim.api.nvim_create_augroup("user_lsp_attach_keymaps", { clear = true })
+
 		vim.api.nvim_create_autocmd("LspAttach", {
+			group = group,
 			callback = function(args)
 				local bufnr = args.buf
 				local client = vim.lsp.get_client_by_id(args.data.client_id)
-				local server_config = opts.servers[client.name] or opts.servers["*"] or {}
-				local keys = server_config.keys or {}
+				if not client then
+					return
+				end
+
+				local global_keys = opts.keys or {}
+				local server_keys = ((opts.servers or {})[client.name] or {}).keys or {}
+				local keys = vim.list_extend(vim.deepcopy(global_keys), vim.deepcopy(server_keys))
 
 				for _, key in ipairs(keys) do
 					local lhs = key[1]
@@ -333,13 +332,13 @@ return {
 				if
 					opts.inlay_hints
 					and opts.inlay_hints.enabled
-					and client.supports_method("textDocument/inlayHint")
+					and client:supports_method("textDocument/inlayHint")
 					and not vim.tbl_contains(opts.inlay_hints.exclude or {}, vim.bo[bufnr].filetype)
 				then
 					vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 				end
 
-				if opts.codelens and opts.codelens.enabled and client.supports_method("textDocument/codeLens") then
+				if opts.codelens and opts.codelens.enabled and client:supports_method("textDocument/codeLens") then
 					vim.lsp.codelens.refresh()
 					vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
 						buffer = bufnr,
@@ -349,14 +348,20 @@ return {
 			end,
 		})
 
-		if opts.servers["*"] then
-			vim.lsp.config("*", opts.servers["*"])
+		if opts.servers and opts.servers["*"] then
+			vim.lsp.config("*", vim.deepcopy(opts.servers["*"]))
 		end
 
-		for server, server_opts in pairs(opts.servers) do
+		for server, server_opts in pairs(opts.servers or {}) do
 			if server ~= "*" then
-				local sopts = server_opts == true and {} or server_opts
-				if sopts.enabled ~= false then
+				local sopts = server_opts == true and {} or vim.deepcopy(server_opts)
+
+				local enabled = sopts.enabled ~= false
+				sopts.enabled = nil
+				sopts.mason = nil
+				sopts.keys = nil
+
+				if enabled then
 					vim.lsp.config(server, sopts)
 				end
 			end

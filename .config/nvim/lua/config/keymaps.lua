@@ -1,3 +1,25 @@
+local function get_root(git)
+	local root = vim.fs.root(vim.api.nvim_buf_get_name(0), function(name, path)
+		if git == true then
+			if name:match(".git") ~= nil then
+				return true
+			end
+		else
+			if name:match("*lock%.json$") ~= nil then
+				return true
+			end
+			local patterns = { ".git", "Makefile", "package.json", "init.lua" }
+			for _, pattern in ipairs(patterns) do
+				if name:match(pattern) ~= nil then
+					return true
+				end
+			end
+		end
+		return false
+	end)
+	return root
+end
+
 -- better up/down
 vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
 vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -138,10 +160,12 @@ Snacks.toggle.option("wrap", { name = "Wrap" }):map("<leader>uw")
 Snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leader>uL")
 Snacks.toggle.diagnostics():map("<leader>ud")
 Snacks.toggle.line_number():map("<leader>ul")
-Snacks.toggle.option("conceallevel", { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2, name = "Conceal Level" }):map("<leader>uc")
-Snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" }):map("<leader>uA")
+Snacks.toggle.option("conceallevel",
+    { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2, name = "Conceal Level" }):map("<leader>uc")
+Snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" })
+    :map("<leader>uA")
 Snacks.toggle.treesitter():map("<leader>uT")
-Snacks.toggle.option("background", { off = "light", on = "dark" , name = "Dark Background" }):map("<leader>ub")
+Snacks.toggle.option("background", { off = "light", on = "dark", name = "Dark Background" }):map("<leader>ub")
 Snacks.toggle.dim():map("<leader>uD")
 Snacks.toggle.animate():map("<leader>ua")
 Snacks.toggle.indent():map("<leader>ug")
@@ -150,22 +174,24 @@ Snacks.toggle.profiler():map("<leader>dpp")
 Snacks.toggle.profiler_highlights():map("<leader>dph")
 
 if vim.lsp.inlay_hint then
-  Snacks.toggle.inlay_hints():map("<leader>uh")
+    Snacks.toggle.inlay_hints():map("<leader>uh")
 end
 
 -- lazygit
 if vim.fn.executable("lazygit") == 1 then
-  vim.keymap.set("n", "<leader>gg", function() Snacks.lazygit( { cwd = LazyVim.root.git() }) end, { desc = "Lazygit (Root Dir)" })
-  vim.keymap.set("n", "<leader>gG", function() Snacks.lazygit() end, { desc = "Lazygit (cwd)" })
+    vim.keymap.set("n", "<leader>gg", function() Snacks.lazygit({ cwd = get_root(true) }) end,
+        { desc = "Lazygit (Root Dir)" })
+    vim.keymap.set("n", "<leader>gG", function() Snacks.lazygit() end, { desc = "Lazygit (cwd)" })
 end
 
 vim.keymap.set("n", "<leader>gL", function() Snacks.picker.git_log() end, { desc = "Git Log (cwd)" })
 vim.keymap.set("n", "<leader>gb", function() Snacks.picker.git_log_line() end, { desc = "Git Blame Line" })
 vim.keymap.set("n", "<leader>gf", function() Snacks.picker.git_log_file() end, { desc = "Git Current File History" })
-vim.keymap.set("n", "<leader>gl", function() Snacks.picker.git_log({ cwd = LazyVim.root.git() }) end, { desc = "Git Log" })
+vim.keymap.set("n", "<leader>gl", function() Snacks.picker.git_log({ cwd = get_root(true) }) end,
+    { desc = "Git Log" })
 vim.keymap.set({ "n", "x" }, "<leader>gB", function() Snacks.gitbrowse() end, { desc = "Git Browse (open)" })
-vim.keymap.set({"n", "x" }, "<leader>gY", function()
-  Snacks.gitbrowse({ open = function(url) vim.fn.setreg("+", url) end, notify = false })
+vim.keymap.set({ "n", "x" }, "<leader>gY", function()
+    Snacks.gitbrowse({ open = function(url) vim.fn.setreg("+", url) end, notify = false })
 end, { desc = "Git Browse (copy)" })
 
 -- quit
@@ -173,13 +199,19 @@ vim.keymap.set("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
 
 -- highlights under cursor
 vim.keymap.set("n", "<leader>ui", vim.show_pos, { desc = "Inspect Pos" })
-vim.keymap.set("n", "<leader>uI", function() vim.treesitter.inspect_tree() vim.api.nvim_input("I") end, { desc = "Inspect Tree" })
+vim.keymap.set("n", "<leader>uI", function()
+    vim.treesitter.inspect_tree()
+    vim.api.nvim_input("I")
+end, { desc = "Inspect Tree" })
 
 -- floating terminal
 vim.keymap.set("n", "<leader>fT", function() Snacks.terminal() end, { desc = "Terminal (cwd)" })
-vim.keymap.set("n", "<leader>ft", function() Snacks.terminal(nil, { cwd = LazyVim.root() }) end, { desc = "Terminal (Root Dir)" })
-vim.keymap.set({"n","t"}, "<c-/>",function() Snacks.terminal.focus(nil, { cwd = LazyVim.root() }) end, { desc = "Terminal (Root Dir)" })
-vim.keymap.set({"n","t"}, "<c-_>",function() Snacks.terminal.focus(nil, { cwd = LazyVim.root() }) end, { desc = "which_key_ignore" })
+vim.keymap.set("n", "<leader>ft", function() Snacks.terminal(nil, { cwd = get_root() }) end,
+    { desc = "Terminal (Root Dir)" })
+vim.keymap.set({ "n", "t" }, "<c-/>", function() Snacks.terminal.focus(nil, { cwd = get_root() }) end,
+    { desc = "Terminal (Root Dir)" })
+vim.keymap.set({ "n", "t" }, "<c-_>", function() Snacks.terminal.focus(nil, { cwd = get_root() }) end,
+    { desc = "which_key_ignore" })
 
 -- windows
 vim.keymap.set("n", "<leader>-", "<C-W>s", { desc = "Split Window Below", remap = true })
@@ -221,17 +253,17 @@ vim.keymap.set(
 
 -- resume Telescope search
 vim.keymap.set(
-  "n",
-  "<leader>sx",
-  require("telescope.builtin").resume,
-  { noremap = true, silent = true, desc = "Resume" }
+    "n",
+    "<leader>sx",
+    require("telescope.builtin").resume,
+    { noremap = true, silent = true, desc = "Resume" }
 )
 
 -- pomodoro timers
 require("telescope").load_extension("pomodori")
 
 vim.keymap.set("n", "<leader>pt", function()
-  require("telescope").extensions.pomodori.timers()
+    require("telescope").extensions.pomodori.timers()
 end, { desc = "Manage Pomodori Timers" })
 
 vim.keymap.set("n", "<leader>po", "<cmd>TimerSession pomodoro<CR>", { desc = "Start Pomodoro" })
@@ -248,49 +280,49 @@ vim.keymap.set("n", "<leader>px", "<cmd>TimerStop<CR>", { desc = "Stop Latest Ti
 
 -- ThePrimeagen/99
 vim.keymap.set("v", "<leader>9v", function()
-_99.visual()
+    require("99").visual()
 end, { desc = "Visual Prompt" })
 
 vim.keymap.set("n", "<leader>9v", function()
-_99.vibe()
+    require("99").vibe()
 end, { desc = "Vibe" })
 
 vim.keymap.set({ "n", "v" }, "<leader>9x", function()
-_99.stop_all_requests()
+    require("99").stop_all_requests()
 end, { desc = "Stop All Requests" })
 
 vim.keymap.set("n", "<leader>9s", function()
-_99.search()
+    require("99").search()
 end, { desc = "Search" })
 
 vim.keymap.set("n", "<leader>9t", function()
-_99.tutorial()
+    require("99").tutorial()
 end, { desc = "Tutorial" })
 
 vim.keymap.set("n", "<leader>9ws", function()
-_99.Extensions.Worker.set_work()
+    require("99").Extensions.Worker.set_work()
 end, { desc = "Set Work" })
 
 vim.keymap.set("n", "<leader>9wr", function()
-_99.Extensions.Worker.search()
+    require("99").Extensions.Worker.search()
 end, { desc = "Find Remaining" })
 
 vim.keymap.set("n", "<leader>9o", function()
-_99.open()
+    require("99").open()
 end, { desc = "Open History" })
 
 vim.keymap.set("n", "<leader>9l", function()
-_99.view_logs()
+    require("99").view_logs()
 end, { desc = "View Logs" })
 
 vim.keymap.set("n", "<leader>9c", function()
-_99.clear_previous_requests()
+    require("99").clear_previous_requests()
 end, { desc = "Clear Previous" })
 
 vim.keymap.set("n", "<leader>9p", function()
-require("99.extensions.telescope").select_provider()
+    require("99.extensions.telescope").select_provider()
 end, { desc = "Select Provider" })
 
 vim.keymap.set("n", "<leader>9m", function()
-require("99.extensions.telescope").select_model()
+    require("99.extensions.telescope").select_model()
 end, { desc = "Select Model" })

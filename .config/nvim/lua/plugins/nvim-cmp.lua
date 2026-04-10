@@ -66,8 +66,6 @@ return {
 			end
 
 			return {
-				auto_brackets = {}, -- your own custom setting; inert unless you implement it elsewhere
-
 				completion = {
 					completeopt = "menu,menuone,noinsert" .. (auto_select and "" or ",noselect"),
 				},
@@ -76,7 +74,7 @@ return {
 
 				snippet = {
 					expand = function(args)
-						require("nvim-snippets").expand(args.body)
+						vim.snippet.expand(args.body)
 					end,
 				},
 
