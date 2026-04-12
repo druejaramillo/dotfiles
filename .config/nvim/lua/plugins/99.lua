@@ -20,7 +20,7 @@ return {
 				--- Completions: #rules and @files in the prompt buffer
 				completion = {
 					custom_rules = {
-						"docs/skills",
+						".opencode/skills",
 					},
 
 					--- Configure @file completion (all fields optional, sensible defaults)
