@@ -1,3 +1,7 @@
+-- display CWD in title
+vim.opt.title = true
+vim.opt.titlestring = "Neovim | " .. vim.fs.basename(vim.fn.getcwd())
+
 -- set <leader>
 vim.g.mapleader = " "
 -- set <localleader>
@@ -24,12 +28,12 @@ vim.opt.cursorline = true
 
 -- icons
 vim.opt.fillchars = {
-  foldopen = "", -- open folds
-  foldclose = "", -- closed folds
-  fold = " ", -- fold filler
-  foldsep = " ", -- fold separator
-  diff = "╱", -- diff filler
-  eob = " ", -- hide ~ at end of buffer
+	foldopen = "", -- open folds
+	foldclose = "", -- closed folds
+	fold = " ", -- fold filler
+	foldsep = " ", -- fold separator
+	diff = "╱", -- diff filler
+	eob = " ", -- hide ~ at end of buffer
 }
 
 -- start with all folds open

@@ -28,6 +28,8 @@ return {
 				"luacheck",
 				"markdownlint-cli2",
 				"yamllint",
+				"html-lsp",
+				"css-lsp",
 			},
 		},
 		---@param opts MasonSettings | {ensure_installed: string[]}

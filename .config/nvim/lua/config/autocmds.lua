@@ -1,3 +1,10 @@
+-- change title when CWD changes
+vim.api.nvim_create_autocmd("DirChanged", {
+	callback = function()
+		vim.opt.titlestring = "Neovim | " .. vim.fs.basename(vim.fn.getcwd())
+	end,
+})
+
 local function augroup(name)
 	return vim.api.nvim_create_augroup("lazyvim_" .. name, { clear = true })
 end
