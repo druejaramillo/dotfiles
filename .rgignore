@@ -1,0 +1,12 @@
+.gradle/
+.m2/
+.nvm/
+.cargo/
+.npm/
+.cocoapods/
+.android/
+.local/
+.cache/
+.git/
+.Trash/
+Library/
