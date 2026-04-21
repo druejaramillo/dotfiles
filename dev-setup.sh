@@ -332,6 +332,17 @@ install_opencode() {
   curl -fsSL https://opencode.ai/install | bash
 }
 
+install_fzf() {
+    if have fzf; then
+        return
+    fi
+
+    log "Installing fzf"
+    ensure_local_bin_on_path
+    git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+    "$HOME/.fzf/install"
+}
+
 change_default_shell_to_zsh() {
   local zsh_path current_shell
   zsh_path="$(command -v zsh)"

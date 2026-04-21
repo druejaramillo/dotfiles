@@ -11,6 +11,9 @@ source $ZSH/oh-my-zsh.sh
 # Dotfiles
 alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
+# fzf
+source <(fzf --zsh)
+
 # Neovim
 alias vim='nvim'
 export EDITOR='nvim'
