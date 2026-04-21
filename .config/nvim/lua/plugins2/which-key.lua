@@ -42,6 +42,10 @@ return {
 				-- ThePrimeagen/99
 				{ "<leader>9", group = "99", icon = "✨" },
 				{ "<leader>9w", group = "Worker", icon = "🤖", mode = "n" },
+				-- sudo-tee/opencode.nvim
+				{ "<leader>o", group = "opencode" },
+				-- A-raj468/pomo.nvim
+				{ "<leader>p", group = "pomodoro", icon = "⏳", mode = "n" },
 				-- better descriptions
 				{ "gx", desc = "Open with system app" },
 			},
