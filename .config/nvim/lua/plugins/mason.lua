@@ -30,6 +30,7 @@ return {
 				"yamllint",
 				"html-lsp",
 				"css-lsp",
+				"emmet-language-server",
 			},
 		},
 		---@param opts MasonSettings | {ensure_installed: string[]}
