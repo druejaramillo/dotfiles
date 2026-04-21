@@ -92,16 +92,6 @@ return {
 			{ "<leader>cs", "<cmd>AerialToggle<cr>", desc = "Aerial (Symbols)" },
 		},
 	},
-
-	{
-		"folke/trouble.nvim",
-		optional = true,
-		keys = {
-			{ "<leader>cs", false },
-		},
-	},
-
-	-- Telescope integration
 	{
 		"nvim-telescope/telescope.nvim",
 		optional = true,
@@ -119,23 +109,6 @@ return {
 			},
 		},
 	},
-
-	-- edgy integration
-	{
-		"folke/edgy.nvim",
-		optional = true,
-		opts = function(_, opts)
-			opts.right = opts.right or {}
-			table.insert(opts.right, {
-				title = "Aerial",
-				ft = "aerial",
-				pinned = true,
-				open = "AerialOpen",
-			})
-		end,
-	},
-
-	-- lualine integration
 	{
 		"nvim-lualine/lualine.nvim",
 		optional = true,

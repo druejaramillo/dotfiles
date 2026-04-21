@@ -47,11 +47,10 @@ vim.opt.foldtext = ""
 -- j: remove comment leader when joining lines
 -- c: auto-wrap comments
 -- r: continue comments on Enter
--- o: continue comments with o/O
 -- q: allow formating with gq
 -- l: long lines not broken in insert mode
 -- n: recognize numbered lists
-vim.opt.formatoptions = "jcroqlnt"
+vim.opt.formatoptions = "jcrqlnt"
 
 -- format for grep results (file:line:col:message)
 vim.opt.grepformat = "%f:%l:%c:%m"

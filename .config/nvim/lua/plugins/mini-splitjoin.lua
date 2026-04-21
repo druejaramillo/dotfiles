@@ -1,5 +1,5 @@
 return {
-	"nvim-mini/mini.surround",
+	"nvim-mini/mini.splitjoin",
 	version = "*",
 	config = true,
 }

@@ -1,3 +1,4 @@
+--- @param git boolean if true, only return git root, otherwise return any root
 local function get_root(git)
 	local root = vim.fs.root(vim.api.nvim_buf_get_name(0), function(name, path)
 		if git == true then
@@ -20,11 +21,10 @@ local function get_root(git)
 	return root
 end
 
--- better up/down
-vim.keymap.set({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
-vim.keymap.set({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
-vim.keymap.set({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
-vim.keymap.set({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
+-- windows
+vim.keymap.set("n", "<leader>-", "<C-W>s", { desc = "Split Window Below", remap = true })
+vim.keymap.set("n", "<leader>|", "<C-W>v", { desc = "Split Window Right", remap = true })
+vim.keymap.set("n", "<leader>wd", "<C-W>c", { desc = "Delete Window", remap = true })
 
 -- move to window using the <ctrl> hjkl keys
 vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Go to Left Window", remap = true })
@@ -38,7 +38,7 @@ vim.keymap.set("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease Window 
 vim.keymap.set("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease Window Width" })
 vim.keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase Window Width" })
 
--- move Lines
+-- move lines
 vim.keymap.set("n", "<A-j>", "<cmd>execute 'move .+' . v:count1<cr>==", { desc = "Move Down" })
 vim.keymap.set("n", "<A-k>", "<cmd>execute 'move .-' . (v:count1 + 1)<cr>==", { desc = "Move Up" })
 vim.keymap.set("i", "<A-j>", "<esc><cmd>m .+1<cr>==gi", { desc = "Move Down" })
@@ -49,10 +49,7 @@ vim.keymap.set("v", "<A-k>", ":<C-u>execute \"'<,'>move '<-\" . (v:count1 + 1)<c
 -- buffers
 vim.keymap.set("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Prev Buffer" })
 vim.keymap.set("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
-vim.keymap.set("n", "[b", "<cmd>bprevious<cr>", { desc = "Prev Buffer" })
-vim.keymap.set("n", "]b", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
-vim.keymap.set("n", "<leader>`", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
 vim.keymap.set("n", "<leader>bd", function()
 	Snacks.bufdelete()
 end, { desc = "Delete Buffer" })
@@ -70,15 +67,13 @@ vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Se
 vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Search Result" })
 
 -- restart LSP server
-vim.keymap.set("n", "<leader>go", "<cmd>LspRestart<cr>")
+vim.keymap.set("n", "<leader>cL", "<cmd>LspRestart<cr>")
 
 -- add undo break-points
+vim.keymap.set("i", " ", " <c-g>u")
 vim.keymap.set("i", ",", ",<c-g>u")
 vim.keymap.set("i", ".", ".<c-g>u")
 vim.keymap.set("i", ";", ";<c-g>u")
-
--- save file
-vim.keymap.set({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save File" })
 
 --keywordprg
 vim.keymap.set("n", "<leader>K", "<cmd>norm! K<cr>", { desc = "Keywordprg" })
@@ -93,17 +88,17 @@ vim.keymap.set("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = 
 
 -- greatest remap ever
 -- paste over selection without overwriting default register
-vim.keymap.set("x", "<leader>p", [["_dP]])
+vim.keymap.set("x", "<leader>p", [["_dP]], { desc = "Paste Without Overwrite" })
 
 -- second greatest remap ever
 -- yank to system clipboard
-vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
+vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]], { desc = "Yank to Clipboard" })
 
 -- yank line to system clipboard
-vim.keymap.set("n", "<leader>Y", [["+Y]])
+vim.keymap.set("n", "<leader>Y", [["+Y]], { desc = "Yank Line to Clipboard" })
 
 -- delete without copying into any register
-vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
+vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]], { desc = "Delete Without Copy" })
 
 -- lazy
 vim.keymap.set("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
@@ -151,47 +146,38 @@ vim.keymap.set("n", "[e", diagnostic_goto(false, "ERROR"), { desc = "Prev Error"
 vim.keymap.set("n", "]w", diagnostic_goto(true, "WARN"), { desc = "Next Warning" })
 vim.keymap.set("n", "[w", diagnostic_goto(false, "WARN"), { desc = "Prev Warning" })
 
--- stylua: ignore start
-
--- toggle options
-local map = vim.keymap.set
-Snacks.toggle.option("spell", { name = "Spelling" }):map("<leader>us")
-Snacks.toggle.option("wrap", { name = "Wrap" }):map("<leader>uw")
-Snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leader>uL")
-Snacks.toggle.diagnostics():map("<leader>ud")
-Snacks.toggle.line_number():map("<leader>ul")
-Snacks.toggle.option("conceallevel",
-    { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2, name = "Conceal Level" }):map("<leader>uc")
-Snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" })
-    :map("<leader>uA")
-Snacks.toggle.treesitter():map("<leader>uT")
-Snacks.toggle.option("background", { off = "light", on = "dark", name = "Dark Background" }):map("<leader>ub")
-Snacks.toggle.dim():map("<leader>uD")
-Snacks.toggle.animate():map("<leader>ua")
-Snacks.toggle.indent():map("<leader>ug")
-Snacks.toggle.scroll():map("<leader>uS")
-Snacks.toggle.profiler():map("<leader>dpp")
-Snacks.toggle.profiler_highlights():map("<leader>dph")
-
-if vim.lsp.inlay_hint then
-    Snacks.toggle.inlay_hints():map("<leader>uh")
-end
-
 -- lazygit
 if vim.fn.executable("lazygit") == 1 then
-    vim.keymap.set("n", "<leader>gg", function() Snacks.lazygit({ cwd = get_root(true) }) end,
-        { desc = "Lazygit (Root Dir)" })
-    vim.keymap.set("n", "<leader>gG", function() Snacks.lazygit() end, { desc = "Lazygit (cwd)" })
+	vim.keymap.set("n", "<leader>gg", function()
+		Snacks.lazygit({ cwd = get_root(true) })
+	end, { desc = "Lazygit (Root Dir)" })
+	vim.keymap.set("n", "<leader>gG", function()
+		Snacks.lazygit()
+	end, { desc = "Lazygit (cwd)" })
 end
 
-vim.keymap.set("n", "<leader>gL", function() Snacks.picker.git_log() end, { desc = "Git Log (cwd)" })
-vim.keymap.set("n", "<leader>gb", function() Snacks.picker.git_log_line() end, { desc = "Git Blame Line" })
-vim.keymap.set("n", "<leader>gf", function() Snacks.picker.git_log_file() end, { desc = "Git Current File History" })
-vim.keymap.set("n", "<leader>gl", function() Snacks.picker.git_log({ cwd = get_root(true) }) end,
-    { desc = "Git Log" })
-vim.keymap.set({ "n", "x" }, "<leader>gB", function() Snacks.gitbrowse() end, { desc = "Git Browse (open)" })
+vim.keymap.set("n", "<leader>gl", function()
+	Snacks.picker.git_log({ cwd = get_root(true) })
+end, { desc = "Git Log" })
+vim.keymap.set("n", "<leader>gL", function()
+	Snacks.picker.git_log()
+end, { desc = "Git Log (cwd)" })
+vim.keymap.set("n", "<leader>gb", function()
+	Snacks.picker.git_log_line()
+end, { desc = "Git Blame Line" })
+vim.keymap.set("n", "<leader>gf", function()
+	Snacks.picker.git_log_file()
+end, { desc = "Git Current File History" })
+vim.keymap.set({ "n", "x" }, "<leader>gB", function()
+	Snacks.gitbrowse()
+end, { desc = "Git Browse (open)" })
 vim.keymap.set({ "n", "x" }, "<leader>gY", function()
-    Snacks.gitbrowse({ open = function(url) vim.fn.setreg("+", url) end, notify = false })
+	Snacks.gitbrowse({
+		open = function(url)
+			vim.fn.setreg("+", url)
+		end,
+		notify = false,
+	})
 end, { desc = "Git Browse (copy)" })
 
 -- quit
@@ -200,129 +186,43 @@ vim.keymap.set("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
 -- highlights under cursor
 vim.keymap.set("n", "<leader>ui", vim.show_pos, { desc = "Inspect Pos" })
 vim.keymap.set("n", "<leader>uI", function()
-    vim.treesitter.inspect_tree()
-    vim.api.nvim_input("I")
+	vim.treesitter.inspect_tree()
+	vim.api.nvim_input("I")
 end, { desc = "Inspect Tree" })
 
 -- floating terminal
-vim.keymap.set("n", "<leader>fT", function() Snacks.terminal() end, { desc = "Terminal (cwd)" })
-vim.keymap.set("n", "<leader>ft", function() Snacks.terminal(nil, { cwd = get_root() }) end,
-    { desc = "Terminal (Root Dir)" })
-vim.keymap.set({ "n", "t" }, "<c-/>", function() Snacks.terminal.focus(nil, { cwd = get_root() }) end,
-    { desc = "Terminal (Root Dir)" })
-vim.keymap.set({ "n", "t" }, "<c-_>", function() Snacks.terminal.focus(nil, { cwd = get_root() }) end,
-    { desc = "which_key_ignore" })
-
--- windows
-vim.keymap.set("n", "<leader>-", "<C-W>s", { desc = "Split Window Below", remap = true })
-vim.keymap.set("n", "<leader>|", "<C-W>v", { desc = "Split Window Right", remap = true })
-vim.keymap.set("n", "<leader>wd", "<C-W>c", { desc = "Delete Window", remap = true })
-Snacks.toggle.zoom():map("<leader>wm"):map("<leader>uZ")
-Snacks.toggle.zen():map("<leader>uz")
+vim.keymap.set("n", "<leader>fT", function()
+	Snacks.terminal()
+end, { desc = "Terminal (cwd)" })
+vim.keymap.set("n", "<leader>ft", function()
+	Snacks.terminal(nil, { cwd = get_root() })
+end, { desc = "Terminal (Root Dir)" })
+vim.keymap.set({ "n", "t" }, "<c-/>", function()
+	Snacks.terminal.focus(nil, { cwd = get_root() })
+end, { desc = "Terminal (Root Dir)" })
+vim.keymap.set({ "n", "t" }, "<c-_>", function()
+	Snacks.terminal.focus(nil, { cwd = get_root() })
+end, { desc = "which_key_ignore" })
 
 -- tabs
-vim.keymap.set("n", "<leader><tab>l", "<cmd>tablast<cr>", { desc = "Last Tab" })
-vim.keymap.set("n", "<leader><tab>o", "<cmd>tabonly<cr>", { desc = "Close Other Tabs" })
-vim.keymap.set("n", "<leader><tab>f", "<cmd>tabfirst<cr>", { desc = "First Tab" })
 vim.keymap.set("n", "<leader><tab><tab>", "<cmd>tabnew<cr>", { desc = "New Tab" })
-vim.keymap.set("n", "<leader><tab>]", "<cmd>tabnext<cr>", { desc = "Next Tab" })
+vim.keymap.set("n", "<leader><tab>l", "<cmd>tabnext<cr>", { desc = "Next Tab" })
+vim.keymap.set("n", "<leader><tab>h", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
 vim.keymap.set("n", "<leader><tab>d", "<cmd>tabclose<cr>", { desc = "Close Tab" })
-vim.keymap.set("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
+vim.keymap.set("n", "<leader><tab>o", "<cmd>tabonly<cr>", { desc = "Close Other Tabs" })
 
 -- insert go boilerplate
+vim.keymap.set("n", "<leader>cee", "oif err != nil {<cr>}<esc>Oreturn err<esc>", { desc = "if err != nil" })
+vim.keymap.set("n", "<leader>cea", 'oassert.NoError(err, "")<esc>F";a', { desc = "assert.NoError" })
 vim.keymap.set(
-    "n",
-    "<leader>ee",
-    "oif err != nil {<cr>}<esc>Oreturn err<esc>"
+	"n",
+	"<leader>cef",
+	'oif err != nil {<cr>}<esc>Olog.Fatalf("error: %s\\n", err.Error())<esc>j',
+	{ desc = "log.Fatalf" }
 )
 vim.keymap.set(
-    "n",
-    "<leader>ea",
-    "oassert.NoError(err, \"\")<esc>F\";a"
+	"n",
+	"<leader>cel",
+	'oif err != nil {<cr>}<esc>Ologger.Add(slog.String("error", err.Error()))\nreturn err<esc>j',
+	{ desc = "logger.Add" }
 )
-vim.keymap.set(
-    "n",
-    "<leader>ef",
-    "oif err != nil {<cr>}<esc>Olog.Fatalf(\"error: %s\\n\", err.Error())<esc>j"
-)
-vim.keymap.set(
-    "n",
-    "<leader>el",
-    "oif err != nil {<cr>}<esc>Ologger.Add(slog.String(\"error\", err.Error()))\nreturn err<esc>j"
-)
-
--- resume Telescope search
-vim.keymap.set(
-    "n",
-    "<leader>sx",
-    require("telescope.builtin").resume,
-    { noremap = true, silent = true, desc = "Resume" }
-)
-
--- pomodoro timers
-require("telescope").load_extension("pomodori")
-
-vim.keymap.set("n", "<leader>pt", function()
-    require("telescope").extensions.pomodori.timers()
-end, { desc = "Manage Pomodori Timers" })
-
-vim.keymap.set("n", "<leader>po", "<cmd>TimerSession pomodoro<CR>", { desc = "Start Pomodoro" })
-
-vim.keymap.set("n", "<leader>ps", "<cmd>TimerSession shallow<CR>", { desc = "Start Shallow Work" })
-
-vim.keymap.set("n", "<leader>pd", "<cmd>TimerSession deep<CR>", { desc = "Start Deep Work" })
-
-vim.keymap.set("n", "<leader>pp", "<cmd>TimerPause<CR>", { desc = "Pause Latest Timer" })
-
-vim.keymap.set("n", "<leader>pr", "<cmd>TimerResume<CR>", { desc = "Resume Latest Timer" })
-
-vim.keymap.set("n", "<leader>px", "<cmd>TimerStop<CR>", { desc = "Stop Latest Timer" })
-
--- ThePrimeagen/99
-vim.keymap.set("v", "<leader>9v", function()
-    require("99").visual()
-end, { desc = "Visual Prompt" })
-
-vim.keymap.set("n", "<leader>9v", function()
-    require("99").vibe()
-end, { desc = "Vibe" })
-
-vim.keymap.set({ "n", "v" }, "<leader>9x", function()
-    require("99").stop_all_requests()
-end, { desc = "Stop All Requests" })
-
-vim.keymap.set("n", "<leader>9s", function()
-    require("99").search()
-end, { desc = "Search" })
-
-vim.keymap.set("n", "<leader>9t", function()
-    require("99").tutorial()
-end, { desc = "Tutorial" })
-
-vim.keymap.set("n", "<leader>9ws", function()
-    require("99").Extensions.Worker.set_work()
-end, { desc = "Set Work" })
-
-vim.keymap.set("n", "<leader>9wr", function()
-    require("99").Extensions.Worker.search()
-end, { desc = "Find Remaining" })
-
-vim.keymap.set("n", "<leader>9o", function()
-    require("99").open()
-end, { desc = "Open History" })
-
-vim.keymap.set("n", "<leader>9l", function()
-    require("99").view_logs()
-end, { desc = "View Logs" })
-
-vim.keymap.set("n", "<leader>9c", function()
-    require("99").clear_previous_requests()
-end, { desc = "Clear Previous" })
-
-vim.keymap.set("n", "<leader>9p", function()
-    require("99.extensions.telescope").select_provider()
-end, { desc = "Select Provider" })
-
-vim.keymap.set("n", "<leader>9m", function()
-    require("99.extensions.telescope").select_model()
-end, { desc = "Select Model" })

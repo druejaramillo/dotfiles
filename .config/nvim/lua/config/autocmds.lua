@@ -1,3 +1,13 @@
+-- change cwd to root dir when vim is opened
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		local arg = vim.fn.argv(0)
+		if vim.fn.isdirectory(arg) == 1 then
+			vim.cmd("cd " .. arg)
+		end
+	end,
+})
+
 -- change title when CWD changes
 vim.api.nvim_create_autocmd("DirChanged", {
 	callback = function()
@@ -5,8 +15,9 @@ vim.api.nvim_create_autocmd("DirChanged", {
 	end,
 })
 
+-- helper function to create custom augroups
 local function augroup(name)
-	return vim.api.nvim_create_augroup("lazyvim_" .. name, { clear = true })
+	return vim.api.nvim_create_augroup("custom_augroup_" .. name, { clear = true })
 end
 
 -- check if we need to reload the file when it changed
@@ -34,24 +45,6 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
 		local current_tab = vim.fn.tabpagenr()
 		vim.cmd("tabdo wincmd =")
 		vim.cmd("tabnext " .. current_tab)
-	end,
-})
-
--- go to last loc when opening a buffer
-vim.api.nvim_create_autocmd("BufReadPost", {
-	group = augroup("last_loc"),
-	callback = function(event)
-		local exclude = { "gitcommit" }
-		local buf = event.buf
-		if vim.tbl_contains(exclude, vim.bo[buf].filetype) or vim.b[buf].lazyvim_last_loc then
-			return
-		end
-		vim.b[buf].lazyvim_last_loc = true
-		local mark = vim.api.nvim_buf_get_mark(buf, '"')
-		local lcount = vim.api.nvim_buf_line_count(buf)
-		if mark[1] > 0 and mark[1] <= lcount then
-			pcall(vim.api.nvim_win_set_cursor, 0, mark)
-		end
 	end,
 })
 
@@ -136,16 +129,6 @@ vim.api.nvim_create_autocmd({ "ColorScheme", "VimEnter" }, {
 	callback = function()
 		vim.api.nvim_set_hl(0, "SupermavenSuggestion", { fg = "#a0a0a0", italic = true })
 		vim.api.nvim_set_hl(0, "CmpGhostText", { fg = "#a0a0a0", italic = true })
-	end,
-})
-
--- change cwd to root dir when vim is opened
-vim.api.nvim_create_autocmd("VimEnter", {
-	callback = function()
-		local arg = vim.fn.argv(0)
-		if vim.fn.isdirectory(arg) == 1 then
-			vim.cmd("cd " .. arg)
-		end
 	end,
 })
 
