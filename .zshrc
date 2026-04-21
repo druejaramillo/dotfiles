@@ -13,17 +13,15 @@ alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
 # fzf
 source <(fzf --zsh)
-export FZF_DEFAULT_COMMAND='rg --files --hidden --no-ignore-vcs'
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --no-ignore-vcs'
 export FZF_DEFAULT_OPTS='--height=50% --reverse --border --prompt="  " --ansi'
 
 _fzf_compgen_path() {
-  rg --files --hidden --no-ignore-vcs "${1:-$HOME}"
+  fd --type f --hidden --no-ignore-vcs . "${1:-$HOME}"
 }
 
 _fzf_compgen_dir() {
-  rg --files --null --hidden --no-ignore-vcs "${1:-$HOME}" \
-    | xargs -0 dirname \
-    | sort -u
+  fd --type d --hidden --no-ignore-vcs . "${1:-$HOME}"
 }
 
 # Neovim
