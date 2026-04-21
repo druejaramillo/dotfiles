@@ -42,6 +42,9 @@ alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@192.168.40.165'
 # SSH into my Hetzner web server
 alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@5.78.180.182'
 
+# Add Go bin directory to PATH
+export PATH="$PATH:$(go env GOPATH)/bin"
+
 # Add ffprobe to path
 PATH="/usr/local/bin/ffprobe:$PATH"
 export PATH
