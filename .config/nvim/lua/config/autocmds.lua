@@ -150,31 +150,41 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 	end,
 })
 
--- go back to dashboard after closing all buffers
+-- go back to dashboard after closin
 vim.api.nvim_create_autocmd("BufDelete", {
-	group = vim.api.nvim_create_augroup("bufdelpost_autocmd", {}),
-	desc = "BufDeletePost User autocmd",
+	group = vim.api.nvim_create_augroup("dashboard_on_empty", { clear = true }),
+	desc = "Open Dashboard when no listed buffers remain",
 	callback = function()
 		vim.schedule(function()
-			vim.api.nvim_exec_autocmds("User", {
-				pattern = "BufDeletePost",
-			})
+			local real_bufs = vim.tbl_filter(function(b)
+				return vim.api.nvim_buf_is_valid(b)
+					and vim.bo[b].buflisted
+					and vim.bo[b].buftype == ""
+					and vim.api.nvim_buf_get_name(b) ~= ""
+			end, vim.api.nvim_list_bufs())
+
+			if #real_bufs == 0 then
+				local target_win, target_buf
+				for _, w in ipairs(vim.api.nvim_list_wins()) do
+					local b = vim.api.nvim_win_get_buf(w)
+					if
+						vim.api.nvim_buf_is_valid(b)
+						and vim.bo[b].buftype == ""
+						and vim.bo[b].filetype == ""
+						and vim.api.nvim_buf_get_name(b) == ""
+					then
+						target_win = w
+						target_buf = b
+						break
+					end
+				end
+
+				if target_win and target_buf then
+					Snacks.dashboard.open({ buf = target_buf, win = target_win })
+				else
+					Snacks.dashboard.open()
+				end
+			end
 		end)
-	end,
-})
-
-vim.api.nvim_create_autocmd("User", {
-	pattern = "BufDeletePost",
-	group = vim.api.nvim_create_augroup("dashboard_delete_buffers", {}),
-	desc = "Open Dashboard when no available buffers",
-	callback = function(ev)
-		local deleted_name = vim.api.nvim_buf_get_name(ev.buf)
-		local deleted_ft = vim.api.nvim_get_option_value("filetype", { buf = ev.buf })
-		local deleted_bt = vim.api.nvim_get_option_value("buftype", { buf = ev.buf })
-		local dashboard_on_empty = deleted_name == "" and deleted_ft == "" and deleted_bt == ""
-
-		if dashboard_on_empty then
-			Snacks.dashboard.open()
-		end
 	end,
 })

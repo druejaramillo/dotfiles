@@ -29,6 +29,7 @@ return {
 				"markdownlint-cli2",
 				"yamllint",
 				"html-lsp",
+				"htmx-lsp",
 				"css-lsp",
 				"emmet-language-server",
 			},

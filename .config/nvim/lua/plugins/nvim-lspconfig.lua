@@ -5,6 +5,7 @@ return {
 		"mason.nvim",
 		{ "mason-org/mason-lspconfig.nvim", config = true },
 		"folke/snacks.nvim",
+		"jmbuhr/otter.nvim",
 	},
 
 	opts = function()
@@ -213,7 +214,7 @@ return {
 				},
 
 				gopls = {
-					filetypes = { "go", "gomod", "gowork", "gotmpl", "templ" },
+					filetypes = { "go", "gomod", "gowork", "gotmpl" },
 					settings = {
 						gopls = {
 							analyses = {
@@ -257,6 +258,73 @@ return {
 
 				emmet_language_server = {
 					filetypes = { "html", "css", "templ", "javascript", "typescript", "svelte" },
+				},
+
+				html = {
+					filetypes = { "html", "css", "javascript", "svelte", "templ" },
+				},
+
+				cssls = {
+					filetypes = { "css", "scss", "less" },
+					init_options = {
+						provideFormatter = true,
+					},
+					settings = {
+						css = {
+							validate = true,
+						},
+						less = {
+							validate = true,
+						},
+						scss = {
+							validate = true,
+						},
+						tailwindcss = {
+							validate = true,
+						},
+					},
+					root_dir = function(fname)
+						vim.fs.root(fname, function(name, path)
+							local patterns = { ".git", "Makefile", "package.json", "init.lua" }
+							for _, pattern in ipairs(patterns) do
+								if name:match(pattern) ~= nil then
+									return true
+								end
+							end
+							return false
+						end)
+					end,
+				},
+
+				htmx = {
+					filetypes = { "html", "css", "javascript", "svelte", "templ" },
+				},
+
+				vtsls = {
+					cmd = { "vtsls", "--stdio" },
+					filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+					init_options = {
+						hostInfo = "neovim",
+					},
+					settings = {
+						vtsls = {
+							autoUseWorkspaceTsdk = true,
+							tsserver = {
+								globalPlugins = {},
+							},
+						},
+					},
+					root_dir = function(fname)
+						vim.fs.root(fname, function(name, path)
+							local patterns = { ".git", "Makefile", "package.json", "init.lua" }
+							for _, pattern in ipairs(patterns) do
+								if name:match(pattern) ~= nil then
+									return true
+								end
+							end
+							return false
+						end)
+					end,
 				},
 			},
 
