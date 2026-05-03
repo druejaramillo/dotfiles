@@ -35,6 +35,8 @@ return {
 			})
 		end
 
+		local util = require("lspconfig.util")
+
 		return {
 			diagnostics = {
 				underline = true,
@@ -262,6 +264,14 @@ return {
 
 				html = {
 					filetypes = { "html", "css", "javascript", "svelte", "templ" },
+					init_options = {
+						provideFormatter = false,
+						configurationSection = { "html", "css", "javascript" },
+						embeddedLanguages = {
+							css = true,
+							javascript = true,
+						},
+					},
 				},
 
 				cssls = {
@@ -284,15 +294,8 @@ return {
 						},
 					},
 					root_dir = function(fname)
-						vim.fs.root(fname, function(name, path)
-							local patterns = { ".git", "Makefile", "package.json", "init.lua" }
-							for _, pattern in ipairs(patterns) do
-								if name:match(pattern) ~= nil then
-									return true
-								end
-							end
-							return false
-						end)
+						return util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git")(fname)
+							or vim.loop.cwd()
 					end,
 				},
 
@@ -303,28 +306,19 @@ return {
 				vtsls = {
 					cmd = { "vtsls", "--stdio" },
 					filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+					root_dir = function(fname)
+						return util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git")(fname)
+							or vim.fn.getcwd()
+					end,
+					single_file_support = true,
 					init_options = {
 						hostInfo = "neovim",
 					},
 					settings = {
 						vtsls = {
 							autoUseWorkspaceTsdk = true,
-							tsserver = {
-								globalPlugins = {},
-							},
 						},
 					},
-					root_dir = function(fname)
-						vim.fs.root(fname, function(name, path)
-							local patterns = { ".git", "Makefile", "package.json", "init.lua" }
-							for _, pattern in ipairs(patterns) do
-								if name:match(pattern) ~= nil then
-									return true
-								end
-							end
-							return false
-						end)
-					end,
 				},
 			},
 
