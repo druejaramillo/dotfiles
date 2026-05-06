@@ -7,7 +7,7 @@ set -euo pipefail
 DOTFILES_REPO="https://github.com/druejaramillo/dotfiles.git"
 DOTFILES_DIR="$HOME/.dotfiles"
 DOTFILES_BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-NVM_VERSION="v0.40.3"
+NVM_VERSION="v0.40.4"
 
 #######################################
 # Logging
@@ -340,7 +340,7 @@ install_fzf() {
     log "Installing fzf"
     ensure_local_bin_on_path
     git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
-    "$HOME/.fzf/install"
+    "$HOME/.fzf/install" --key-bindings --completion --no-update-rc
 }
 
 setup_fd_symlink() {

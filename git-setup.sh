@@ -12,6 +12,7 @@ GPG_KEY_LENGTH="4096"
 GPG_EXPIRE_DATE="0"
 GITHUB_HOST="github.com"
 PACKAGE_MANAGER=""
+FORCE_REGEN_GPG=false
 
 #######################################
 # Logging
@@ -66,6 +67,7 @@ Optional:
   --github-host HOST         GitHub hostname (default: github.com)
   --package-manager VALUE    Force package manager on Linux:
                              apt, apt-get, dnf, pacman, zypper
+  --force                    Delete and regenerate the GPG key even if one already exists
   --help                     Show this help
 
 Examples:
@@ -121,6 +123,10 @@ parse_args() {
         [[ $# -ge 2 ]] || { err "--package-manager requires a value"; exit 1; }
         PACKAGE_MANAGER="$2"
         shift 2
+        ;;
+      --force)
+        FORCE_REGEN_GPG=true
+        shift
         ;;
       --help|-h)
         usage
@@ -211,7 +217,7 @@ install_linux_packages() {
       sudo_if_needed dnf install -y git gh gnupg2 pinentry ca-certificates curl
       ;;
     pacman)
-      sudo_if_needed pacman -Sy --noconfirm git github-cli gnupg pinentry ca-certificates curl
+      sudo_if_needed pacman -Sy --needed --noconfirm git github-cli gnupg pinentry ca-certificates curl
       ;;
     zypper)
       sudo_if_needed zypper install -y git gh gpg2 pinentry ca-certificates curl
@@ -292,8 +298,12 @@ authenticate_gh() {
     log "GitHub CLI already authenticated for $GITHUB_HOST"
   else
     log "Authenticating GitHub CLI"
-    gh auth login --hostname "$GITHUB_HOST" --git-protocol https --web
+    gh auth login --hostname "$GITHUB_HOST" --git-protocol https --web \
+      --scopes "write:gpg_key"
   fi
+
+  log "Ensuring write:gpg_key scope is granted"
+  gh auth refresh --hostname "$GITHUB_HOST" --scopes "write:gpg_key"
 
   log "Configuring Git to use GitHub CLI as credential helper"
   gh auth setup-git --hostname "$GITHUB_HOST"
@@ -302,9 +312,30 @@ authenticate_gh() {
 #######################################
 # GPG key creation / discovery
 #######################################
+
+# Returns the long key ID (e.g. ABCD1234ABCD1234) for the first secret key
+# matching GIT_EMAIL, using --with-colons for stable parsing across gpg versions.
 find_existing_key_id_for_email() {
-  gpg --list-secret-keys --keyid-format=long "$GIT_EMAIL" 2>/dev/null \
-    | awk '/^sec[[:space:]]/ { split($2, a, "/"); print a[2]; exit }'
+  # --with-colons output: sec lines have key ID in field 5, uid lines have email in field 10
+  # We find the first sec entry whose associated uid matches the email.
+  gpg --list-secret-keys --with-colons "$GIT_EMAIL" 2>/dev/null \
+    | awk -F: -v email="$GIT_EMAIL" '/^sec:/ { keyid=$5 } keyid && /^uid:/ && index($10, email) { print keyid; exit }'
+}
+
+# Returns the full 40-char fingerprint for the first secret key matching GIT_EMAIL.
+# GnuPG 2.4+ batch --delete-secret-and-public-key requires the fingerprint, not the key ID.
+find_existing_fingerprint_for_email() {
+  gpg --list-secret-keys --with-colons "$GIT_EMAIL" 2>/dev/null \
+    | awk -F: '
+        /^sec:/  { found_sec=1 }
+        found_sec && /^fpr:/ { print $10; found_sec=0; exit }
+      '
+}
+
+delete_gpg_key() {
+  local fingerprint="$1"
+  log "Deleting existing GPG key $fingerprint (--force)"
+  gpg --batch --yes --delete-secret-and-public-key "$fingerprint" || true
 }
 
 generate_gpg_key() {
@@ -368,7 +399,7 @@ upload_gpg_key_to_github() {
 
   if gh auth status -h "$GITHUB_HOST" >/dev/null 2>&1; then
     log "Uploading public GPG key to GitHub"
-    if gh gpg-key add "$pubkey_file" --title "$(hostname)-$(date +%Y-%m-%d)" >/dev/null 2>&1; then
+    if gh gpg-key add "$pubkey_file" --title "$(hostname)-$(date +%Y-%m-%d)"; then
       log "GPG key uploaded to GitHub"
     else
       warn "Could not upload GPG key automatically. It may already exist, or gh may need refreshed scopes."
@@ -457,8 +488,18 @@ main() {
   configure_git_identity
   authenticate_gh
 
-  local key_id
+  local key_id fingerprint
   key_id="$(find_existing_key_id_for_email || true)"
+
+  if [[ -n "$key_id" ]] && [[ "$FORCE_REGEN_GPG" == "true" ]]; then
+    fingerprint="$(find_existing_fingerprint_for_email || true)"
+    if [[ -n "$fingerprint" ]]; then
+      delete_gpg_key "$fingerprint"
+    else
+      warn "Could not find fingerprint for existing key $key_id; skipping deletion"
+    fi
+    key_id=""
+  fi
 
   if [[ -z "$key_id" ]]; then
     generate_gpg_key
@@ -474,10 +515,9 @@ main() {
   configure_git_signing "$key_id"
 
   local pubkey_file
-  pubkey_file="$(mktemp)"
+  pubkey_file="$HOME/.gnupg/github-gpg-key.pub"
   export_public_key "$key_id" "$pubkey_file"
   upload_gpg_key_to_github "$pubkey_file"
-  rm -f "$pubkey_file"
 
   test_signing
   print_summary "$key_id"
