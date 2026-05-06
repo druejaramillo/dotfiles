@@ -56,6 +56,9 @@ alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@5.78.180.182'
 # Add Go bin directory to PATH
 export PATH="$PATH:$(go env GOPATH)/bin"
 
+# Add to pkg config path
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
+
 # Add ffprobe to path
 PATH="/usr/local/bin/ffprobe:$PATH"
 export PATH
