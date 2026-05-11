@@ -54,7 +54,7 @@ alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@192.168.40.165'
 alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@5.78.180.182'
 
 # Add Go bin directory to PATH
-export PATH="$PATH:$(go env GOPATH)/bin"
+export PATH="$PATH:/usr/local/go/bin"
 
 # Add to pkg config path
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
@@ -84,3 +84,5 @@ eval "$(starship init zsh)"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
