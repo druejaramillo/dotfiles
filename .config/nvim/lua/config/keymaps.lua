@@ -67,7 +67,7 @@ vim.keymap.set("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Se
 vim.keymap.set("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Search Result" })
 
 -- restart LSP server
-vim.keymap.set("n", "<leader>cL", "<cmd>LspRestart<cr>")
+vim.keymap.set("n", "<leader>cL", "<cmd>lsp restart<cr>")
 
 -- add undo break-points
 vim.keymap.set("i", " ", " <c-g>u")
