@@ -133,11 +133,11 @@ vim.opt.nu = true
 vim.opt.relativenumber = true
 
 -- tab size
-vim.opt.tabstop = 4
+vim.opt.tabstop = 2
 -- tab size in insert mode
-vim.opt.softtabstop = 4
+vim.opt.softtabstop = 2
 -- auto indent size
-vim.opt.shiftwidth = 4
+vim.opt.shiftwidth = 2
 -- convert tabs to spaces
 vim.opt.expandtab = true
 

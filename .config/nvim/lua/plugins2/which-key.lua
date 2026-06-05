@@ -46,6 +46,8 @@ return {
 				{ "<leader>o", group = "opencode" },
 				-- A-raj468/pomo.nvim
 				{ "<leader>p", group = "pomodoro", icon = "⏳", mode = "n" },
+				-- brianhuster/live-preview.nvim
+				{ "<leader>cp", group = "Live Preview", mode = "n" },
 				-- better descriptions
 				{ "gx", desc = "Open with system app" },
 			},
