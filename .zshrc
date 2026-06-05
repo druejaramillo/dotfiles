@@ -55,6 +55,7 @@ alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@5.78.180.182'
 
 # Add Go bin directory to PATH
 export PATH="$PATH:/usr/local/go/bin"
+export PATH="$PATH:$(go env GOPATH)/bin"
 
 # Add to pkg config path
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
