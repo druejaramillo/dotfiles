@@ -3,85 +3,38 @@ local function has(plugin)
 	return ok and lazy_config.plugins[plugin] ~= nil
 end
 
-local function open_neotest_output()
-	vim.defer_fn(function()
-		pcall(function()
-			require("neotest").output_panel.open()
-		end)
-	end, 200)
+local function term_cmd(cmd, cwd)
+	vim.cmd("botright split")
+	vim.cmd("resize 15")
+
+	if cwd then
+		vim.cmd("terminal cd " .. vim.fn.shellescape(cwd) .. " && " .. cmd)
+	else
+		vim.cmd("terminal " .. cmd)
+	end
+
+	vim.cmd("startinsert")
+end
+
+local function current_file_dir()
+	return vim.fn.expand("%:p:h")
 end
 
 local function run_go_bench_file()
-	require("neotest").run.run({
-		vim.fn.expand("%"),
-		extra_args = {
-			go_test_args = {
-				"-v",
-				"-run=^$",
-				"-bench=.",
-				"-benchmem",
-				"-count=5",
-			},
-		},
-	})
-
-	open_neotest_output()
+	term_cmd("go test -v -run=^$ -bench=. -benchmem -count=5 .", current_file_dir())
 end
 
 local function run_go_bench_all()
-	require("neotest").run.run({
-		vim.uv.cwd(),
-		extra_args = {
-			go_test_args = {
-				"-v",
-				"-run=^$",
-				"-bench=.",
-				"-benchmem",
-				"-count=5",
-			},
-		},
-	})
-
-	open_neotest_output()
-end
-
-local function run_go_fuzz_file()
-	local target = vim.fn.expand("<cword>")
-
-	require("neotest").run.run({
-		vim.fn.expand("%"),
-		extra_args = {
-			go_test_args = {
-				"-v",
-				"-run=^$",
-				"-fuzz=" .. target,
-				"-fuzztime=10s",
-			},
-		},
-	})
-
-	open_neotest_output()
+	term_cmd("go test -v -run=^$ -bench=. -benchmem -count=5 ./...", vim.fn.getcwd())
 end
 
 local function run_go_fuzz_prompt()
-	vim.ui.input({ prompt = "Fuzz target regex: ", default = "Fuzz" }, function(input)
+	vim.ui.input({ prompt = "Fuzz target: ", default = "Fuzz" }, function(input)
 		if not input or input == "" then
 			return
 		end
 
-		require("neotest").run.run({
-			vim.fn.expand("%"),
-			extra_args = {
-				go_test_args = {
-					"-v",
-					"-run=^$",
-					"-fuzz=" .. input,
-					"-fuzztime=10s",
-				},
-			},
-		})
-
-		open_neotest_output()
+		term_cmd("go test -v -run=^$ -fuzz=" .. vim.fn.shellescape(input) .. " -fuzztime=10s .", current_file_dir())
 	end)
 end
 
@@ -288,22 +241,17 @@ return {
 			{
 				"<leader>tb",
 				run_go_bench_file,
-				desc = "Run Benchmarks in File",
+				desc = "Run Go Benchmarks in File Package",
 			},
 			{
 				"<leader>tB",
 				run_go_bench_all,
-				desc = "Run All Benchmarks",
+				desc = "Run All Go Benchmarks",
 			},
 			{
 				"<leader>tf",
-				run_go_fuzz_file,
-				desc = "Run Fuzz Target Under Cursor",
-			},
-			{
-				"<leader>tF",
 				run_go_fuzz_prompt,
-				desc = "Run Fuzz Target",
+				desc = "Run Go Fuzz Target",
 			},
 		},
 	},
