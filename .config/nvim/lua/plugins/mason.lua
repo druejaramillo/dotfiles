@@ -14,7 +14,7 @@ return {
 				"prettierd",
 				"prettier",
 				"gopls",
-				"go-debug-adapter",
+				"delve",
 				"goimports",
 				"gofumpt",
 				"mdformat",

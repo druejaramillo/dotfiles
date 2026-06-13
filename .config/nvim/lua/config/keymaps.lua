@@ -92,13 +92,13 @@ vim.keymap.set("x", "<leader>p", [["_dP]], { desc = "Paste Without Overwrite" })
 
 -- second greatest remap ever
 -- yank to system clipboard
-vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]], { desc = "Yank to Clipboard" })
+vim.keymap.set("v", "<leader>y", [["+y]], { desc = "Yank to Clipboard" })
 
 -- yank line to system clipboard
 vim.keymap.set("n", "<leader>Y", [["+Y]], { desc = "Yank Line to Clipboard" })
 
 -- delete without copying into any register
-vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]], { desc = "Delete Without Copy" })
+vim.keymap.set("v", "<leader>d", [["_d]], { desc = "Delete Without Copy" })
 
 -- lazy
 vim.keymap.set("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })

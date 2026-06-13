@@ -171,7 +171,9 @@ vim.opt.scrolloff = 10
 -- keep 10 columns visible left/right of cursor while side scrolling
 vim.opt.sidescrolloff = 10
 -- always show sign column
-vim.opt.signcolumn = "yes"
+vim.opt.signcolumn = "yes:3"
+-- custom status column
+vim.opt.statuscolumn = "%s%=%l "
 
 -- show vertical line at column 100
 vim.opt.colorcolumn = "100"
