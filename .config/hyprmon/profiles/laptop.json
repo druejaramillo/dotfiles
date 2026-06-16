@@ -3,77 +3,28 @@
   "monitors": [
     {
       "name": "eDP-1",
-      "hardware_id": "Apple Computer Inc/Color LCD",
-      "make": "Apple Computer Inc",
-      "model": "Color LCD",
-      "PxW": 2880,
-      "PxH": 1800,
+      "hardware_id": "Samsung Display Corp./ATNA60KA04-0/0x00000032",
+      "make": "Samsung Display Corp.",
+      "model": "ATNA60KA04-0 ",
+      "serial": "0x00000032",
+      "PxW": 3200,
+      "PxH": 2000,
       "Hz": 60,
-      "Scale": 1.75,
+      "Scale": 2,
       "X": 0,
       "Y": 1088,
       "Active": true,
-      "EDIDName": "Apple Computer Inc Color LCD",
+      "EDIDName": "Samsung Display Corp. ATNA60KA04-0  0x00000032",
       "Modes": [
         {
-          "W": 2880,
-          "H": 1800,
+          "W": 3200,
+          "H": 2000,
           "Hz": 60
         },
         {
-          "W": 1920,
-          "H": 1200,
-          "Hz": 60
-        },
-        {
-          "W": 1920,
-          "H": 1080,
-          "Hz": 60
-        },
-        {
-          "W": 1600,
-          "H": 1200,
-          "Hz": 60
-        },
-        {
-          "W": 1680,
-          "H": 1050,
-          "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 1024,
-          "Hz": 60
-        },
-        {
-          "W": 1440,
-          "H": 900,
-          "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 800,
-          "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 720,
-          "Hz": 60
-        },
-        {
-          "W": 1024,
-          "H": 768,
-          "Hz": 60
-        },
-        {
-          "W": 800,
-          "H": 600,
-          "Hz": 60
-        },
-        {
-          "W": 640,
-          "H": 480,
-          "Hz": 60
+          "W": 3200,
+          "H": 2000,
+          "Hz": 120
         }
       ],
       "BitDepth": 0,
@@ -91,5 +42,5 @@
     }
   ],
   "created_at": "2026-05-27T20:38:38.150204548-06:00",
-  "updated_at": "2026-05-27T20:42:08.2702362-06:00"
+  "updated_at": "2026-06-16T03:05:12.737369202-06:00"
 }
