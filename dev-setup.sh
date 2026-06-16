@@ -145,6 +145,29 @@ install_base_packages_linux() {
   esac
 }
 
+install_go_linux() {
+  if have go; then
+    return
+  fi
+
+  log "Installing Go via $PKG_MGR"
+
+  case "$PKG_MGR" in
+  apt | apt-get)
+    sudo_if_needed "$PKG_MGR" install -y golang-go
+    ;;
+  dnf)
+    sudo_if_needed dnf install -y golang
+    ;;
+  pacman)
+    sudo_if_needed pacman -S --noconfirm go
+    ;;
+  zypper)
+    sudo_if_needed zypper install -y go
+    ;;
+  esac
+}
+
 install_starship_linux() {
   if have starship; then
     return
@@ -282,7 +305,7 @@ install_base_packages_macos() {
   brew update
 
   brew install \
-    zsh git starship lazygit lazydocker ripgrep neovim python \
+    zsh git starship lazygit lazydocker ripgrep neovim python go \
     postgresql@16 luarocks fd
 
   if ! have docker; then
@@ -344,6 +367,31 @@ install_nvm_node() {
   append_line_if_missing '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' "$HOME/.zshrc"
 
   export PATH="$NVM_DIR/versions/node/$(nvm version default)/bin:$PATH"
+}
+
+install_rust() {
+  if [[ -f "$HOME/.cargo/env" ]]; then
+    # shellcheck disable=SC1090
+    . "$HOME/.cargo/env"
+  fi
+
+  if have rustc && have cargo; then
+    append_line_if_missing '[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"' "$HOME/.zshrc"
+    return
+  fi
+
+  log "Installing Rust via rustup"
+  curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y
+
+  if [[ ! -f "$HOME/.cargo/env" ]]; then
+    err "Rust installation failed; expected $HOME/.cargo/env"
+    exit 1
+  fi
+
+  append_line_if_missing '[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"' "$HOME/.zshrc"
+
+  # shellcheck disable=SC1090
+  . "$HOME/.cargo/env"
 }
 
 install_tree_sitter_cli() {
@@ -477,6 +525,8 @@ Installed / configured:
   - Oh My Zsh
   - Starship
   - git
+  - go
+  - rust
   - docker
   - lazygit
   - lazydocker
@@ -501,6 +551,9 @@ Recommended next steps:
        zsh --version
        starship --version
        git --version
+       go version
+       rustc --version
+       cargo --version
        docker --version
        lazygit --version
        lazydocker --version
@@ -529,6 +582,7 @@ main() {
     detect_linux_pkg_mgr
     update_system_packages_linux
     install_base_packages_linux
+    install_go_linux
     install_starship_linux
     install_docker_linux
     install_lazygit_linux
@@ -542,6 +596,7 @@ main() {
 
   install_oh_my_zsh
   install_nvm_node
+  install_rust
   install_tree_sitter_cli
   install_opencode
   clone_dotfiles
