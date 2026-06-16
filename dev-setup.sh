@@ -308,26 +308,29 @@ install_oh_my_zsh() {
 }
 
 install_nvm_node() {
+  # Ignore any NVM_DIR inherited from .zshrc/.profile/dotfiles/etc.
+  unset NVM_DIR
   export NVM_DIR="$HOME/.nvm"
 
   if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
     log "Installing nvm"
-    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
+
+    mkdir -p "$NVM_DIR"
+
+    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" |
+      PROFILE=/dev/null bash
   fi
 
-  # Load nvm into this script process
-  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
-    # shellcheck disable=SC1090
-    . "$NVM_DIR/nvm.sh"
-  else
-    err "nvm installed, but $NVM_DIR/nvm.sh was not found"
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    err "nvm installation failed; expected $NVM_DIR/nvm.sh"
     exit 1
   fi
 
-  # nvm is a shell function, so check via `type`, not `command -v`
+  # shellcheck disable=SC1090
+  . "$NVM_DIR/nvm.sh"
+
   if ! type nvm >/dev/null 2>&1; then
-    err "nvm failed to load"
-    err "Expected to source: $NVM_DIR/nvm.sh"
+    err "nvm failed to load after sourcing $NVM_DIR/nvm.sh"
     exit 1
   fi
 
@@ -340,7 +343,6 @@ install_nvm_node() {
   append_line_if_missing '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' "$HOME/.zshrc"
   append_line_if_missing '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' "$HOME/.zshrc"
 
-  # Make node/npm available to the rest of this script
   export PATH="$NVM_DIR/versions/node/$(nvm version default)/bin:$PATH"
 }
 
