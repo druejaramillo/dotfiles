@@ -3,77 +3,28 @@
   "monitors": [
     {
       "name": "eDP-1",
-      "hardware_id": "Apple Computer Inc/Color LCD",
-      "make": "Apple Computer Inc",
-      "model": "Color LCD",
-      "PxW": 2880,
-      "PxH": 1800,
-      "Hz": 60.001,
-      "Scale": 1.8,
+      "hardware_id": "Samsung Display Corp./ATNA60KA04-0/0x00000032",
+      "make": "Samsung Display Corp.",
+      "model": "ATNA60KA04-0 ",
+      "serial": "0x00000032",
+      "PxW": 3200,
+      "PxH": 2000,
+      "Hz": 60,
+      "Scale": 2,
       "X": 0,
       "Y": 1088,
       "Active": true,
-      "EDIDName": "Apple Computer Inc Color LCD",
+      "EDIDName": "Samsung Display Corp. ATNA60KA04-0  0x00000032",
       "Modes": [
         {
-          "W": 2880,
-          "H": 1800,
+          "W": 3200,
+          "H": 2000,
           "Hz": 60
         },
         {
-          "W": 1920,
-          "H": 1200,
-          "Hz": 60
-        },
-        {
-          "W": 1920,
-          "H": 1080,
-          "Hz": 60
-        },
-        {
-          "W": 1600,
-          "H": 1200,
-          "Hz": 60
-        },
-        {
-          "W": 1680,
-          "H": 1050,
-          "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 1024,
-          "Hz": 60
-        },
-        {
-          "W": 1440,
-          "H": 900,
-          "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 800,
-          "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 720,
-          "Hz": 60
-        },
-        {
-          "W": 1024,
-          "H": 768,
-          "Hz": 60
-        },
-        {
-          "W": 800,
-          "H": 600,
-          "Hz": 60
-        },
-        {
-          "W": 640,
-          "H": 480,
-          "Hz": 60
+          "W": 3200,
+          "H": 2000,
+          "Hz": 120
         }
       ],
       "BitDepth": 0,
@@ -90,34 +41,34 @@
       "DragOffY": 0
     },
     {
-      "name": "DP-6",
-      "hardware_id": "TGD/MP185M1-H/0x30305153",
-      "make": "TGD",
-      "model": "MP185M1-H",
-      "serial": "0x30305153",
+      "name": "DP-1",
+      "hardware_id": "pmns GmbH/S8PRO MAX-R/S8PRO-R251216",
+      "make": "pmns GmbH",
+      "model": "S8PRO MAX-R",
+      "serial": "S8PRO-R251216",
       "PxW": 1920,
-      "PxH": 1080,
-      "Hz": 75,
-      "Scale": 1,
+      "PxH": 1200,
+      "Hz": 60.001,
+      "Scale": 1.25,
       "X": 1600,
       "Y": 1088,
       "Active": true,
-      "EDIDName": "TGD MP185M1-H 0x30305153",
+      "EDIDName": "pmns GmbH S8PRO MAX-R S8PRO-R251216",
       "Modes": [
         {
           "W": 1920,
-          "H": 1080,
-          "Hz": 75
+          "H": 1200,
+          "Hz": 60
         },
         {
           "W": 1920,
           "H": 1080,
-          "Hz": 100
+          "Hz": 60
         },
         {
           "W": 1920,
           "H": 1080,
-          "Hz": 75
+          "Hz": 60
         },
         {
           "W": 1920,
@@ -132,7 +83,7 @@
         {
           "W": 1920,
           "H": 1080,
-          "Hz": 60
+          "Hz": 59.94
         },
         {
           "W": 1920,
@@ -141,38 +92,28 @@
         },
         {
           "W": 1600,
-          "H": 1200,
-          "Hz": 60
-        },
-        {
-          "W": 1680,
-          "H": 1050,
-          "Hz": 59.95
-        },
-        {
-          "W": 1600,
           "H": 900,
           "Hz": 60
-        },
-        {
-          "W": 1280,
-          "H": 1024,
-          "Hz": 60.02
-        },
-        {
-          "W": 1440,
-          "H": 900,
-          "Hz": 59.89
-        },
-        {
-          "W": 1152,
-          "H": 864,
-          "Hz": 75
         },
         {
           "W": 1280,
           "H": 720,
           "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 59.94
         },
         {
           "W": 1280,
@@ -196,28 +137,8 @@
         },
         {
           "W": 720,
-          "H": 576,
-          "Hz": 50
-        },
-        {
-          "W": 720,
-          "H": 576,
-          "Hz": 50
-        },
-        {
-          "W": 720,
           "H": 480,
           "Hz": 60
-        },
-        {
-          "W": 720,
-          "H": 480,
-          "Hz": 60
-        },
-        {
-          "W": 720,
-          "H": 480,
-          "Hz": 59.94
         },
         {
           "W": 720,
@@ -228,6 +149,11 @@
           "W": 640,
           "H": 480,
           "Hz": 60
+        },
+        {
+          "W": 640,
+          "H": 480,
+          "Hz": 59.94
         },
         {
           "W": 640,
@@ -245,10 +171,144 @@
       "MirrorSource": "",
       "MirrorTargets": [],
       "Dragging": false,
-      "DragOffX": 450,
-      "DragOffY": 706
+      "DragOffX": 0,
+      "DragOffY": 0
+    },
+    {
+      "name": "DP-2",
+      "hardware_id": "Smart Silicon Systems Pty Ltd/S8PRO MAX-L/S8PRO-L251216",
+      "make": "Smart Silicon Systems Pty Ltd",
+      "model": "S8PRO MAX-L",
+      "serial": "S8PRO-L251216",
+      "PxW": 1920,
+      "PxH": 1200,
+      "Hz": 60.001,
+      "Scale": 1.25,
+      "X": -1536,
+      "Y": 1088,
+      "Active": true,
+      "EDIDName": "Smart Silicon Systems Pty Ltd S8PRO MAX-L S8PRO-L251216",
+      "Modes": [
+        {
+          "W": 1920,
+          "H": 1200,
+          "Hz": 60
+        },
+        {
+          "W": 1920,
+          "H": 1080,
+          "Hz": 60
+        },
+        {
+          "W": 1920,
+          "H": 1080,
+          "Hz": 60
+        },
+        {
+          "W": 1920,
+          "H": 1080,
+          "Hz": 60
+        },
+        {
+          "W": 1920,
+          "H": 1080,
+          "Hz": 59.94
+        },
+        {
+          "W": 1920,
+          "H": 1080,
+          "Hz": 59.94
+        },
+        {
+          "W": 1920,
+          "H": 1080,
+          "Hz": 50
+        },
+        {
+          "W": 1600,
+          "H": 900,
+          "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 60
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 59.94
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 59.94
+        },
+        {
+          "W": 1280,
+          "H": 720,
+          "Hz": 50
+        },
+        {
+          "W": 1024,
+          "H": 768,
+          "Hz": 60
+        },
+        {
+          "W": 800,
+          "H": 600,
+          "Hz": 60.32
+        },
+        {
+          "W": 720,
+          "H": 480,
+          "Hz": 60
+        },
+        {
+          "W": 720,
+          "H": 480,
+          "Hz": 59.94
+        },
+        {
+          "W": 640,
+          "H": 480,
+          "Hz": 60
+        },
+        {
+          "W": 640,
+          "H": 480,
+          "Hz": 59.94
+        },
+        {
+          "W": 640,
+          "H": 480,
+          "Hz": 59.94
+        }
+      ],
+      "BitDepth": 0,
+      "ColorMode": "",
+      "SDRBrightness": 0,
+      "SDRSaturation": 0,
+      "VRR": 0,
+      "Transform": 0,
+      "IsMirrored": false,
+      "MirrorSource": "",
+      "MirrorTargets": [],
+      "Dragging": false,
+      "DragOffX": 0,
+      "DragOffY": 0
     }
   ],
   "created_at": "2026-05-29T10:16:28.441075495-06:00",
-  "updated_at": "2026-05-29T10:16:28.441075572-06:00"
+  "updated_at": "2026-06-16T16:29:53.657157007-06:00"
 }
