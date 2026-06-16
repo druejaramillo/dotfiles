@@ -12,9 +12,9 @@ NVM_VERSION="v0.40.4"
 #######################################
 # Logging
 #######################################
-log()  { printf "\n\033[1;34m==>\033[0m %s\n" "$*"; }
+log() { printf "\n\033[1;34m==>\033[0m %s\n" "$*"; }
 warn() { printf "\n\033[1;33mWARN:\033[0m %s\n" "$*"; }
-err()  { printf "\n\033[1;31mERROR:\033[0m %s\n" "$*" >&2; }
+err() { printf "\n\033[1;31mERROR:\033[0m %s\n" "$*" >&2; }
 
 #######################################
 # Helpers
@@ -26,23 +26,31 @@ append_line_if_missing() {
   local file="$2"
   mkdir -p "$(dirname "$file")"
   touch "$file"
-  grep -Fqx "$line" "$file" || printf "%s\n" "$line" >> "$file"
+  grep -Fqx "$line" "$file" || printf "%s\n" "$line" >>"$file"
 }
 
 detect_os() {
   case "$(uname -s)" in
-    Darwin) OS="macos" ;;
-    Linux)  OS="linux" ;;
-    *) err "Unsupported OS: $(uname -s)"; exit 1 ;;
+  Darwin) OS="macos" ;;
+  Linux) OS="linux" ;;
+  *)
+    err "Unsupported OS: $(uname -s)"
+    exit 1
+    ;;
   esac
 }
 
 detect_linux_pkg_mgr() {
-  if have apt; then PKG_MGR="apt"
-  elif have apt-get; then PKG_MGR="apt-get"
-  elif have dnf; then PKG_MGR="dnf"
-  elif have pacman; then PKG_MGR="pacman"
-  elif have zypper; then PKG_MGR="zypper"
+  if have apt; then
+    PKG_MGR="apt"
+  elif have apt-get; then
+    PKG_MGR="apt-get"
+  elif have dnf; then
+    PKG_MGR="dnf"
+  elif have pacman; then
+    PKG_MGR="pacman"
+  elif have zypper; then
+    PKG_MGR="zypper"
   else
     err "Unsupported Linux package manager. Supported: apt, dnf, pacman, zypper"
     exit 1
@@ -88,18 +96,18 @@ install_homebrew_if_needed_macos() {
 #######################################
 update_system_packages_linux() {
   case "$PKG_MGR" in
-    apt|apt-get)
-      sudo_if_needed apt update
-      ;;
-    dnf)
-      sudo_if_needed dnf makecache
-      ;;
-    pacman)
-      sudo_if_needed pacman -Sy --noconfirm
-      ;;
-    zypper)
-      sudo_if_needed zypper refresh
-      ;;
+  apt | apt-get)
+    sudo_if_needed apt update
+    ;;
+  dnf)
+    sudo_if_needed dnf makecache
+    ;;
+  pacman)
+    sudo_if_needed pacman -Sy --noconfirm
+    ;;
+  zypper)
+    sudo_if_needed zypper refresh
+    ;;
   esac
 }
 
@@ -107,33 +115,33 @@ install_base_packages_linux() {
   log "Installing base packages via $PKG_MGR"
 
   case "$PKG_MGR" in
-    apt|apt-get)
-      sudo_if_needed "$PKG_MGR" install -y \
-        zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
-        build-essential ripgrep neovim python3 python3-pip python3-venv \
-        postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
-        libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find
-      ;;
-    dnf)
-      sudo_if_needed dnf install -y \
-        zsh git curl wget unzip tar xz ca-certificates gnupg2 \
-        gcc gcc-c++ make ripgrep neovim python3 python3-pip \
-        postgresql postgresql-server postgresql-contrib \
-        pkgconf-pkg-config openssl-devel readline-devel zlib-devel \
-        libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find
-      ;;
-    pacman)
-      sudo_if_needed pacman -S --noconfirm \
-        zsh git curl wget unzip tar xz ca-certificates gnupg \
-        base-devel ripgrep neovim python python-pip \
-        postgresql luarocks fontconfig fd
-      ;;
-    zypper)
-      sudo_if_needed zypper install -y \
-        zsh git curl wget unzip tar xz ca-certificates gpg2 \
-        gcc gcc-c++ make ripgrep neovim python3 python3-pip \
-        postgresql postgresql-server luarocks fontconfig fd
-      ;;
+  apt | apt-get)
+    sudo_if_needed "$PKG_MGR" install -y \
+      zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
+      build-essential ripgrep neovim python3 python3-pip python3-venv \
+      postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
+      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find
+    ;;
+  dnf)
+    sudo_if_needed dnf install -y \
+      zsh git curl wget unzip tar xz ca-certificates gnupg2 \
+      gcc gcc-c++ make ripgrep neovim python3 python3-pip \
+      postgresql postgresql-server postgresql-contrib \
+      pkgconf-pkg-config openssl-devel readline-devel zlib-devel \
+      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find
+    ;;
+  pacman)
+    sudo_if_needed pacman -S --noconfirm \
+      zsh git curl wget unzip tar xz ca-certificates gnupg \
+      base-devel ripgrep neovim python python-pip \
+      postgresql luarocks fontconfig fd
+    ;;
+  zypper)
+    sudo_if_needed zypper install -y \
+      zsh git curl wget unzip tar xz ca-certificates gpg2 \
+      gcc gcc-c++ make ripgrep neovim python3 python3-pip \
+      postgresql postgresql-server luarocks fontconfig fd
+    ;;
   esac
 }
 
@@ -154,36 +162,45 @@ install_docker_linux() {
   log "Installing Docker on Linux"
 
   case "$PKG_MGR" in
-    apt|apt-get)
-      sudo_if_needed "$PKG_MGR" install -y ca-certificates curl gnupg
-      sudo_if_needed install -m 0755 -d /etc/apt/keyrings
+  apt | apt-get)
+    sudo_if_needed "$PKG_MGR" install -y ca-certificates curl gnupg
+    sudo_if_needed install -m 0755 -d /etc/apt/keyrings
 
-      if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
-        curl -fsSL "https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg" \
-          | sudo_if_needed gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-      fi
+    if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+      curl -fsSL "https://download.docker.com/linux/$(
+        . /etc/os-release
+        echo "$ID"
+      )/gpg" |
+        sudo_if_needed gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    fi
 
-      sudo_if_needed chmod a+r /etc/apt/keyrings/docker.gpg
+    sudo_if_needed chmod a+r /etc/apt/keyrings/docker.gpg
 
-      echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
-        $(. /etc/os-release; echo "${VERSION_CODENAME:-$UBUNTU_CODENAME}") stable" \
-        | sudo_if_needed tee /etc/apt/sources.list.d/docker.list >/dev/null
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(
+        . /etc/os-release
+        echo "$ID"
+      ) \
+        $(
+        . /etc/os-release
+        echo "${VERSION_CODENAME:-$UBUNTU_CODENAME}"
+      ) stable" |
+      sudo_if_needed tee /etc/apt/sources.list.d/docker.list >/dev/null
 
-      sudo_if_needed "$PKG_MGR" update
-      sudo_if_needed "$PKG_MGR" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-      ;;
-    dnf)
-      sudo_if_needed dnf -y install dnf-plugins-core
-      sudo_if_needed dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo || true
-      sudo_if_needed dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-      ;;
-    pacman)
-      sudo_if_needed pacman -S --noconfirm docker docker-compose
-      ;;
-    zypper)
-      sudo_if_needed zypper install -y docker docker-compose
-      ;;
+    sudo_if_needed "$PKG_MGR" update
+    sudo_if_needed "$PKG_MGR" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    ;;
+  dnf)
+    sudo_if_needed dnf -y install dnf-plugins-core
+    sudo_if_needed dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo || true
+    sudo_if_needed dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    ;;
+  pacman)
+    sudo_if_needed pacman -S --noconfirm docker docker-compose
+    ;;
+  zypper)
+    sudo_if_needed zypper install -y docker docker-compose
+    ;;
   esac
 
   sudo_if_needed systemctl enable docker || true
@@ -206,9 +223,12 @@ install_lazygit_linux() {
   version="$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')"
 
   case "$(uname -m)" in
-    x86_64|amd64) arch="x86_64" ;;
-    arm64|aarch64) arch="arm64" ;;
-    *) err "Unsupported architecture for lazygit: $(uname -m)"; exit 1 ;;
+  x86_64 | amd64) arch="x86_64" ;;
+  arm64 | aarch64) arch="arm64" ;;
+  *)
+    err "Unsupported architecture for lazygit: $(uname -m)"
+    exit 1
+    ;;
   esac
 
   tmpdir="$(mktemp -d)"
@@ -288,17 +308,26 @@ install_oh_my_zsh() {
 }
 
 install_nvm_node() {
-  if [[ ! -d "$HOME/.nvm" ]]; then
+  export NVM_DIR="$HOME/.nvm"
+
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
     log "Installing nvm"
     curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
   fi
 
-  export NVM_DIR="$HOME/.nvm"
-  # shellcheck disable=SC1090
-  [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
+  # Load nvm into this script process
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    # shellcheck disable=SC1090
+    . "$NVM_DIR/nvm.sh"
+  else
+    err "nvm installed, but $NVM_DIR/nvm.sh was not found"
+    exit 1
+  fi
 
-  if ! command -v nvm >/dev/null 2>&1; then
+  # nvm is a shell function, so check via `type`, not `command -v`
+  if ! type nvm >/dev/null 2>&1; then
     err "nvm failed to load"
+    err "Expected to source: $NVM_DIR/nvm.sh"
     exit 1
   fi
 
@@ -310,6 +339,9 @@ install_nvm_node() {
   append_line_if_missing 'export NVM_DIR="$HOME/.nvm"' "$HOME/.zshrc"
   append_line_if_missing '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' "$HOME/.zshrc"
   append_line_if_missing '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"' "$HOME/.zshrc"
+
+  # Make node/npm available to the rest of this script
+  export PATH="$NVM_DIR/versions/node/$(nvm version default)/bin:$PATH"
 }
 
 install_tree_sitter_cli() {
@@ -333,14 +365,14 @@ install_opencode() {
 }
 
 install_fzf() {
-    if have fzf; then
-        return
-    fi
+  if have fzf; then
+    return
+  fi
 
-    log "Installing fzf"
-    ensure_local_bin_on_path
-    git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
-    "$HOME/.fzf/install" --key-bindings --completion --no-update-rc
+  log "Installing fzf"
+  ensure_local_bin_on_path
+  git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+  "$HOME/.fzf/install" --key-bindings --completion --no-update-rc
 }
 
 setup_fd_symlink() {
@@ -392,13 +424,13 @@ clone_dotfiles() {
     warn "Dotfiles checkout had conflicts. Backing up existing files to $DOTFILES_BACKUP_DIR"
     mkdir -p "$DOTFILES_BACKUP_DIR"
 
-    "$git_bin" --git-dir="$DOTFILES_DIR/" --work-tree="$HOME" checkout 2>&1 \
-      | grep -E '^\s+\.' \
-      | awk '{print $1}' \
-      | while read -r file; do
-          mkdir -p "$DOTFILES_BACKUP_DIR/$(dirname "$file")"
-          mv "$HOME/$file" "$DOTFILES_BACKUP_DIR/$file"
-        done
+    "$git_bin" --git-dir="$DOTFILES_DIR/" --work-tree="$HOME" checkout 2>&1 |
+      grep -E '^\s+\.' |
+      awk '{print $1}' |
+      while read -r file; do
+        mkdir -p "$DOTFILES_BACKUP_DIR/$(dirname "$file")"
+        mv "$HOME/$file" "$DOTFILES_BACKUP_DIR/$file"
+      done
 
     "$git_bin" --git-dir="$DOTFILES_DIR/" --work-tree="$HOME" checkout -f
   fi
@@ -417,19 +449,19 @@ setup_postgres() {
   fi
 
   case "$PKG_MGR" in
-    apt|apt-get)
-      sudo_if_needed systemctl enable postgresql || true
-      sudo_if_needed systemctl start postgresql || true
-      ;;
-    dnf|zypper)
-      sudo_if_needed systemctl enable postgresql || true
-      sudo_if_needed systemctl start postgresql || true
-      ;;
-    pacman)
-      warn "On Arch, initialize PostgreSQL manually if needed:"
-      warn "  sudo -iu postgres initdb -D /var/lib/postgres/data"
-      warn "  sudo systemctl enable --now postgresql"
-      ;;
+  apt | apt-get)
+    sudo_if_needed systemctl enable postgresql || true
+    sudo_if_needed systemctl start postgresql || true
+    ;;
+  dnf | zypper)
+    sudo_if_needed systemctl enable postgresql || true
+    sudo_if_needed systemctl start postgresql || true
+    ;;
+  pacman)
+    warn "On Arch, initialize PostgreSQL manually if needed:"
+    warn "  sudo -iu postgres initdb -D /var/lib/postgres/data"
+    warn "  sudo systemctl enable --now postgresql"
+    ;;
   esac
 }
 
