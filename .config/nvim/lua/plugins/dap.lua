@@ -19,15 +19,20 @@ local function get_args(config)
 	return config
 end
 
-local function refresh_dapui()
+local dapui_is_open = false
+
+local function refresh_dapui_if_open()
+	if not dapui_is_open then
+		return
+	end
+
 	local ok, dapui = pcall(require, "dapui")
 	if not ok then
 		return
 	end
 
 	vim.schedule(function()
-		-- Refresh without disturbing the bottom tray.
-		-- This is much less annoying than closing/reopening all dap-ui windows.
+		-- Refresh only the sidebar layout where breakpoints live.
 		dapui.close({ layout = 1 })
 		dapui.open({ layout = 1 })
 	end)
@@ -52,7 +57,7 @@ return {
 				"<leader>dB",
 				function()
 					require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
-					refresh_dapui()
+					refresh_dapui_if_open()
 				end,
 				desc = "Breakpoint Condition",
 			},
@@ -60,7 +65,7 @@ return {
 				"<leader>db",
 				function()
 					require("dap").toggle_breakpoint()
-					refresh_dapui()
+					refresh_dapui_if_open()
 				end,
 				desc = "Toggle Breakpoint",
 			},
@@ -124,7 +129,7 @@ return {
 				"<leader>dL",
 				function()
 					require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
-					refresh_dapui()
+					refresh_dapui_if_open()
 				end,
 				desc = "Log Point",
 			},
@@ -267,7 +272,15 @@ return {
 			{
 				"<leader>du",
 				function()
-					require("dapui").toggle({})
+					local dapui = require("dapui")
+
+					if dapui_is_open then
+						dapui.close({})
+						dapui_is_open = false
+					else
+						dapui.open({})
+						dapui_is_open = true
+					end
 				end,
 				desc = "Dap UI",
 			},
@@ -289,14 +302,17 @@ return {
 
 			dap.listeners.after.event_initialized["dapui_config"] = function()
 				dapui.open({})
+				dapui_is_open = true
 			end
 
 			dap.listeners.before.event_terminated["dapui_config"] = function()
 				dapui.close({})
+				dapui_is_open = false
 			end
 
 			dap.listeners.before.event_exited["dapui_config"] = function()
 				dapui.close({})
+				dapui_is_open = false
 			end
 		end,
 	},
