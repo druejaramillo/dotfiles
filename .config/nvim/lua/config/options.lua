@@ -28,12 +28,12 @@ vim.opt.cursorline = true
 
 -- icons
 vim.opt.fillchars = {
-	foldopen = "", -- open folds
-	foldclose = "", -- closed folds
-	fold = " ", -- fold filler
-	foldsep = " ", -- fold separator
-	diff = "╱", -- diff filler
-	eob = " ", -- hide ~ at end of buffer
+  foldopen = "", -- open folds
+  foldclose = "", -- closed folds
+  fold = " ", -- fold filler
+  foldsep = " ", -- fold separator
+  diff = "╱", -- diff filler
+  eob = " ", -- hide ~ at end of buffer
 }
 
 -- start with all folds open
@@ -82,14 +82,14 @@ vim.opt.ruler = false
 
 -- what gets saved in sessions
 vim.opt.sessionoptions = {
-	"buffers",
-	"curdir",
-	"tabpages",
-	"winsize",
-	"help",
-	"globals",
-	"skiprtp",
-	"folds",
+  "buffers",
+  "curdir",
+  "tabpages",
+  "winsize",
+  "help",
+  "globals",
+  "skiprtp",
+  "folds",
 }
 
 -- reduce command-line messages
@@ -194,3 +194,6 @@ vim.opt.winbar = "%=%m %f"
 
 -- disable default markdown indentation rules
 vim.g.markdown_recommended_style = 0
+
+-- disable lazy.nvim check order (annoying warning message)
+vim.g.lazyvim_check_order = false
