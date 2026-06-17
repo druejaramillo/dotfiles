@@ -37,3 +37,6 @@
 	helper = !/usr/bin/gh auth git-credential
 [core]
 	filemode = false
+[filter "stripmonitor"]
+  clean = grep -v '^monitor='
+  smudge = cat
