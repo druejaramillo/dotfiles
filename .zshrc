@@ -77,10 +77,17 @@ export PATH="/usr/local/opt/python@3.12/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
 alias python3="/usr/local/bin/python3.12"
 
+# Set GPG_TTY to current tty
 export GPG_TTY=$(tty)
+
+# Source Rust env
 . "$HOME/.cargo/env"
 
+# Starship
 eval "$(starship init zsh)"
+
+# Try
+eval "$(try init ~/Work/tries)"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
