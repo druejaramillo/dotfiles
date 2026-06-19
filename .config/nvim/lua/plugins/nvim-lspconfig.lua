@@ -120,7 +120,7 @@ return {
 					end,
 					desc = "Rename File",
 				},
-				-- { "<leader>cr", vim.lsp.buf.rename, desc = "Rename Symbol" },
+				{ "<leader>cr", vim.lsp.buf.rename, desc = "Rename Symbol" },
 				{ "<leader>cA", source_action, desc = "Source Action" },
 				{
 					"]]",

@@ -9,7 +9,7 @@ local function get_root(git)
 			if name:match("*lock%.json$") ~= nil then
 				return true
 			end
-			local patterns = { ".git", "Makefile", "package.json", "init.lua" }
+			local patterns = { ".git", "Makefile", "package.json", "init.lua", "go.mod" }
 			for _, pattern in ipairs(patterns) do
 				if name:match(pattern) ~= nil then
 					return true
