@@ -1,5 +1,15 @@
-theme = "omarchy"
+theme = "user:carbonfox"
 notifications_enabled = true
 auto_sync_enabled = true
 
 [groups]
+default = [
+    "personal",
+    "druejaramillo-petracapitalproperties-com-2",
+    "merlin-tech",
+    "hra-cto",
+    "hra-treasurer",
+    "hra-events-calendar",
+    "birthdays",
+    "holidays-in-united-states",
+]
