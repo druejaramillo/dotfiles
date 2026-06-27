@@ -6,7 +6,7 @@ return {
 		local basename = vim.fs.basename(cwd)
 		_99.setup({
 			provider = _99.Providers.OpenCodeProvider, -- default: OpenCodeProvider
-			model = "anthropic/claude-sonnet-4-5",
+			model = "openai/gpt-5.4-mini-fast",
 
 			logger = {
 				level = _99.DEBUG,
@@ -19,6 +19,7 @@ return {
 			--- Completions: #rules and @files in the prompt buffer
 			completion = {
 				custom_rules = {
+					".agents/skills",
 					".opencode/skills",
 				},
 
@@ -41,6 +42,7 @@ return {
 			--- assuming that /foo is project root (based on cwd)
 			md_files = {
 				"AGENTS.md",
+				"CONTEXT.md",
 			},
 		})
 	end,
