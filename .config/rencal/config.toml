@@ -1,0 +1,5 @@
+theme = "omarchy"
+notifications_enabled = true
+auto_sync_enabled = true
+
+[groups]
