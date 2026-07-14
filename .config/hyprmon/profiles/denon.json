@@ -11,8 +11,8 @@
       "PxH": 2000,
       "Hz": 60,
       "Scale": 2,
-      "X": 0,
-      "Y": 1088,
+      "X": -5120,
+      "Y": 1080,
       "Active": false,
       "EDIDName": "Samsung Display Corp. ATNA60KA04-0  0x00000032",
       "Modes": [
@@ -42,18 +42,18 @@
     },
     {
       "name": "DP-5",
-      "hardware_id": "LG Electronics/LG ULTRAGEAR/0x0003D1F7",
+      "hardware_id": "LG Electronics/LG ULTRAGEAR/0x0003D200",
       "make": "LG Electronics",
       "model": "LG ULTRAGEAR",
-      "serial": "0x0003D1F7",
+      "serial": "0x0003D200",
       "PxW": 1920,
       "PxH": 1080,
       "Hz": 60,
       "Scale": 1,
-      "X": 640,
+      "X": -7040,
       "Y": 0,
       "Active": true,
-      "EDIDName": "LG Electronics LG ULTRAGEAR 0x0003D1F7",
+      "EDIDName": "LG Electronics LG ULTRAGEAR 0x0003D200",
       "Modes": [
         {
           "W": 1920,
@@ -241,18 +241,18 @@
     },
     {
       "name": "DP-6",
-      "hardware_id": "LG Electronics/LG ULTRAGEAR/0x0003D200",
+      "hardware_id": "LG Electronics/LG ULTRAGEAR/0x0003D1F7",
       "make": "LG Electronics",
       "model": "LG ULTRAGEAR",
-      "serial": "0x0003D200",
+      "serial": "0x0003D1F7",
       "PxW": 1920,
       "PxH": 1080,
       "Hz": 60,
       "Scale": 1,
-      "X": -1280,
+      "X": -5120,
       "Y": 0,
       "Active": true,
-      "EDIDName": "LG Electronics LG ULTRAGEAR 0x0003D200",
+      "EDIDName": "LG Electronics LG ULTRAGEAR 0x0003D1F7",
       "Modes": [
         {
           "W": 1920,
@@ -639,5 +639,5 @@
     }
   ],
   "created_at": "2026-05-29T13:33:05.64199356-06:00",
-  "updated_at": "2026-06-19T16:57:29.610691662-06:00"
+  "updated_at": "2026-07-10T18:16:15.479397798-06:00"
 }
