@@ -120,7 +120,7 @@ install_base_packages_linux() {
       zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
       build-essential ripgrep neovim python3 python3-pip python3-venv \
       postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
-      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find
+      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find fzf ruby
     ;;
   dnf)
     sudo_if_needed dnf install -y \
@@ -128,19 +128,19 @@ install_base_packages_linux() {
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
       postgresql postgresql-server postgresql-contrib \
       pkgconf-pkg-config openssl-devel readline-devel zlib-devel \
-      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find
+      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find fzf ruby
     ;;
   pacman)
     sudo_if_needed pacman -S --noconfirm \
       zsh git curl wget unzip tar xz ca-certificates gnupg \
       base-devel ripgrep neovim python python-pip \
-      postgresql luarocks fontconfig fd
+      postgresql luarocks fontconfig fd fzf ruby
     ;;
   zypper)
     sudo_if_needed zypper install -y \
       zsh git curl wget unzip tar xz ca-certificates gpg2 \
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
-      postgresql postgresql-server luarocks fontconfig fd
+      postgresql postgresql-server luarocks fontconfig fd fzf ruby
     ;;
   esac
 }
@@ -306,7 +306,7 @@ install_base_packages_macos() {
 
   brew install \
     zsh git starship lazygit lazydocker ripgrep neovim python go \
-    postgresql@16 luarocks fd
+    postgresql@16 luarocks fd fzf ruby
 
   if ! have docker; then
     brew install --cask docker
@@ -414,15 +414,22 @@ install_opencode() {
   curl -fsSL https://opencode.ai/install | bash
 }
 
-install_fzf() {
-  if have fzf; then
+install_try_cli() {
+  if have try; then
     return
   fi
 
-  log "Installing fzf"
-  ensure_local_bin_on_path
-  git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
-  "$HOME/.fzf/install" --key-bindings --completion --no-update-rc
+  if ! have gem; then
+    err "RubyGems is required to install try-cli"
+    exit 1
+  fi
+
+  log "Installing try-cli via RubyGems"
+  if [[ "$OS" == "linux" ]]; then
+    sudo_if_needed gem install try-cli
+  else
+    gem install try-cli
+  fi
 }
 
 setup_fd_symlink() {
@@ -536,6 +543,8 @@ Installed / configured:
   - luarocks
   - ripgrep
   - fd
+  - fzf
+  - ruby + try-cli
   - nvm + Node.js + npm
   - OpenCode
   - python
@@ -562,6 +571,9 @@ Recommended next steps:
        luarocks --version
        rg --version
        fd --version
+       fzf --version
+       ruby --version
+       try --version
        node --version
        npm --version
        opencode --version || true
@@ -599,6 +611,7 @@ main() {
   install_rust
   install_tree_sitter_cli
   install_opencode
+  install_try_cli
   clone_dotfiles
   change_default_shell_to_zsh
   setup_postgres

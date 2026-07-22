@@ -35,7 +35,7 @@ Two scripts handle everything on a fresh machine.
 bash dev-setup.sh
 ```
 
-This installs zsh, Oh My Zsh, Starship, git, Docker, lazygit, lazydocker, nvm + Node.js, neovim, ripgrep, fd, fzf, tree-sitter, luarocks, PostgreSQL, Python, FiraCode Nerd Font, and OpenCode. It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
+This installs zsh, Oh My Zsh, Starship, git, Docker, lazygit, lazydocker, nvm + Node.js, neovim, ripgrep, fd, fzf, Ruby + try-cli, tree-sitter, luarocks, PostgreSQL, Python, FiraCode Nerd Font, and OpenCode. It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
 
 > **Note:** nvm and node will not be available until you start a new shell after the script finishes.
 
@@ -156,6 +156,7 @@ dotfiles push
 | ripgrep | Fast grep |
 | fd | Fast find |
 | fzf | Fuzzy finder |
+| Ruby + try-cli | Try workspace manager |
 | luarocks | Lua package manager |
 | Python 3 | Scripting |
 | PostgreSQL | Database |
