@@ -83,7 +83,18 @@ git clone --bare https://github.com/druejaramillo/dotfiles.git $HOME/.dotfiles
 alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 ```
 
-**3. Check out the dotfiles:**
+**3. Optionally remove conflicting files:**
+
+Before checking out the dotfiles, you can interactively review pre-existing, untracked files in `$HOME` that may conflict with them:
+
+```bash
+cd "$HOME"
+dotfiles clean -i
+```
+
+This is the bare-repository equivalent of `git clean -i`. Select only files you are certain you no longer need, since selected files are permanently deleted. To include untracked directories, use `dotfiles clean -i -d` and review the choices especially carefully. Skip this step if you want to keep the files and back them up instead.
+
+**4. Check out the dotfiles:**
 
 ```bash
 dotfiles checkout
@@ -98,13 +109,13 @@ dotfiles checkout 2>&1 | grep -E '^\s+\.' | awk '{print $1}' | \
 dotfiles checkout
 ```
 
-**4. Hide untracked files:**
+**5. Hide untracked files:**
 
 ```bash
 dotfiles config --local status.showUntrackedFiles no
 ```
 
-**5. Persist the alias** (add to `~/.zshrc` or `~/.bashrc`):
+**6. Persist the alias** (add to `~/.zshrc` or `~/.bashrc`):
 
 ```bash
 alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
