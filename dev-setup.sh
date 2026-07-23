@@ -120,7 +120,7 @@ install_base_packages_linux() {
       zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
       build-essential ripgrep neovim python3 python3-pip python3-venv \
       postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
-      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find fzf ruby
+      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find fzf ruby tmux
     ;;
   dnf)
     sudo_if_needed dnf install -y \
@@ -128,19 +128,19 @@ install_base_packages_linux() {
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
       postgresql postgresql-server postgresql-contrib \
       pkgconf-pkg-config openssl-devel readline-devel zlib-devel \
-      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find fzf ruby
+      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find fzf ruby tmux
     ;;
   pacman)
     sudo_if_needed pacman -S --noconfirm \
       zsh git curl wget unzip tar xz ca-certificates gnupg \
       base-devel ripgrep neovim python python-pip \
-      postgresql luarocks fontconfig fd fzf ruby
+      postgresql luarocks fontconfig fd fzf ruby tmux
     ;;
   zypper)
     sudo_if_needed zypper install -y \
       zsh git curl wget unzip tar xz ca-certificates gpg2 \
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
-      postgresql postgresql-server luarocks fontconfig fd fzf ruby
+      postgresql postgresql-server luarocks fontconfig fd fzf ruby tmux
     ;;
   esac
 }
@@ -306,7 +306,7 @@ install_base_packages_macos() {
 
   brew install \
     zsh git starship lazygit lazydocker ripgrep neovim python go \
-    postgresql@16 luarocks fd fzf ruby
+    postgresql@16 luarocks fd fzf ruby tmux
 
   if ! have docker; then
     brew install --cask docker
@@ -544,6 +544,7 @@ Installed / configured:
   - ripgrep
   - fd
   - fzf
+  - tmux
   - ruby + try-cli
   - nvm + Node.js + npm
   - OpenCode
@@ -572,6 +573,7 @@ Recommended next steps:
        rg --version
        fd --version
        fzf --version
+       tmux -V
        ruby --version
        try --version
        node --version
