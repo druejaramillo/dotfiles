@@ -1,0 +1,336 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+
+  "theme": "carbonfox",
+
+  // Faster leader sequences than the 2000 ms default.
+  "leader_timeout": 1000,
+
+  // Predictable keyboard and occasional mouse scrolling.
+  "scroll_speed": 3,
+  "scroll_acceleration": {
+    "enabled": false
+  },
+  "diff_style": "auto",
+  "mouse": true,
+
+  "keybinds": {
+    // ============================================================
+    // Leader
+    // ============================================================
+
+    // Kept away from common tmux prefixes such as ctrl+b, ctrl+a, or ctrl+space
+    "leader": "ctrl+x",
+
+    // ============================================================
+    // Application
+    // ============================================================
+
+    "app_exit": "<leader>q",
+
+    // Command palette
+    "command_list": "<leader>space",
+
+    "help_show": "<leader>?",
+    "docs_open": "none",
+
+    // Development and diagnostic commands I do not plan to use
+    "app_debug": "none",
+    "app_console": "none",
+    "app_heap_snapshot": "none",
+
+    // ============================================================
+    // External editor
+    // ============================================================
+
+    // Opens the current prompt in $EDITOR
+    "editor_open": "<leader>e",
+
+    // ============================================================
+    // UI
+    //
+    // Prefix: <leader>u
+    // ============================================================
+
+    "sidebar_toggle": "<leader>ub",
+    "theme_list": "<leader>ut",
+    "tips_toggle": "<leader>ui",
+    "which_key_toggle": "<leader>?",
+
+    // Which-key navigation remains available inside the popup
+    "which_key_layout_toggle": "ctrl+alt+shift+k",
+    "which_key_pending_toggle": "ctrl+alt+shift+p",
+    "which_key_group_previous": "ctrl+alt+left,ctrl+alt+[",
+    "which_key_group_next": "ctrl+alt+right,ctrl+alt+]",
+    "which_key_scroll_up": "ctrl+alt+up,ctrl+alt+p",
+    "which_key_scroll_down": "ctrl+alt+down,ctrl+alt+n",
+    "which_key_page_up": "ctrl+alt+pageup",
+    "which_key_page_down": "ctrl+alt+pagedown",
+    "which_key_home": "ctrl+alt+home",
+    "which_key_end": "ctrl+alt+end",
+
+    // UI features I do not use
+    "status_view": "none",
+    "scrollbar_toggle": "none",
+    "app_toggle_animations": "none",
+    "app_toggle_file_context": "none",
+    "app_toggle_diffwrap": "none",
+    "app_toggle_paste_summary": "none",
+    "app_toggle_session_directory_filter": "none",
+    "terminal_title_toggle": "none",
+
+    // ============================================================
+    // Sessions
+    //
+    // Prefix: <leader>s
+    // ============================================================
+
+    "session_new": "<leader>sn",
+    "session_list": "<leader>ss",
+    "session_rename": "<leader>sr",
+    "session_delete": "<leader>sd",
+    "session_fork": "<leader>sf",
+    "session_export": "<leader>se",
+    "session_compact": "<leader>sc",
+
+    // Escape remains the fastest way to interrupt generation
+    "session_interrupt": "escape",
+
+    // Session tree navigation
+    // sj: descend to first child
+    // sk: move to parent
+    // s]: next sibling/child
+    // s[: previous sibling/child
+    "session_child_first": "<leader>sj",
+    "session_parent": "<leader>sk",
+    "session_child_cycle": "<leader>s]",
+    "session_child_cycle_reverse": "<leader>s[",
+
+    // Session features I do not plan to use
+    "session_timeline": "none",
+    "session_share": "none",
+    "session_unshare": "none",
+    "session_copy": "none",
+    "session_move": "none",
+    "session_toggle_timestamps": "none",
+    "session_toggle_generic_tool_output": "none",
+
+    // ============================================================
+    // Models and providers
+    //
+    // Prefix: <leader>m
+    // ============================================================
+
+    "model_list": "<leader>mm",
+    "model_provider_list": "<leader>mp",
+    "model_favorite_toggle": "<leader>mf",
+
+    // Vim-like j/k cycling through favorite models
+    "model_cycle_favorite": "<leader>mj",
+    "model_cycle_favorite_reverse": "<leader>mk",
+
+    // Variants
+    "variant_list": "<leader>mv",
+    "variant_cycle": "<leader>mn",
+
+    // I chose favorite-model cycling rather than recent-model cycling
+    "model_cycle_recent": "none",
+    "model_cycle_recent_reverse": "none",
+
+    // ============================================================
+    // Agents
+    //
+    // Prefix: <leader>a
+    // ============================================================
+
+    "agent_list": "<leader>aa",
+    "agent_cycle": "<leader>aj,tab",
+    "agent_cycle_reverse": "<leader>ak,shift+tab",
+
+    // ============================================================
+    // Providers and plugins
+    //
+    // Prefix: <leader>p
+    // ============================================================
+
+    "provider_connect": "<leader>pc",
+    "plugin_manager": "<leader>pm",
+    "plugin_install": "<leader>pi",
+
+    "plugins.toggle": "space",
+    "dialog.plugins.install": "shift+i",
+
+    // Integrations I do not use
+    "mcp_list": "none",
+    "console_org_switch": "none",
+
+    // ============================================================
+    // Message navigation
+    //
+    // Vim-inspired global navigation.
+    // ============================================================
+
+    // Line movement
+    "messages_line_up": "<leader>k",
+    "messages_line_down": "<leader>j",
+
+    // Half-page movement
+    "messages_half_page_up": "<leader>u",
+    "messages_half_page_down": "<leader>d",
+
+    // Jump to boundaries
+    "messages_first": "<leader>g,home",
+    "messages_last": "<leader>shift+g,end",
+
+    // Move between individual messages
+    "messages_next": "<leader>n",
+    "messages_previous": "<leader>p",
+    "messages_last_user": "<leader>gu",
+
+    // Message operations
+    "messages_copy": "<leader>y",
+    "messages_undo": "<leader>z",
+    "messages_redo": "<leader>shift+z",
+    "messages_toggle_conceal": "<leader>h",
+
+    // Inspection
+    "tool_details": "<leader>v",
+    "display_thinking": "<leader>r",
+
+    // I do not need full-page movement
+    "messages_page_up": "none",
+    "messages_page_down": "none",
+
+    // ============================================================
+    // Prompt-level features
+    //
+    // Prefix: <leader>w or <leader>k
+    // ============================================================
+
+    "prompt_skills": "<leader>ks",
+    "workspace_set": "<leader>ww",
+
+    // Prompt features I do not use
+    "prompt_stash": "none",
+    "prompt_stash_pop": "none",
+    "prompt_stash_list": "none",
+    "stash_delete": "none",
+
+    // These are not needed because input_submit and input_clear provide the actual prompt behavior
+    "prompt_submit": "none",
+    "prompt_editor_context_clear": "<leader>wc",
+
+    // ============================================================
+    // Prompt input
+    //
+    // OpenCode does not currently provide a true modal Vim mode,
+    // so these preserve reliable terminal text editing.
+    // ============================================================
+
+    "input_clear": "ctrl+c",
+
+    "input_paste": {
+      "key": "ctrl+v",
+      "preventDefault": false
+    },
+
+    "input_submit": "return",
+
+    // Multiple reliable ways to create a new line
+    "input_newline": "shift+return,ctrl+return,alt+return,ctrl+j",
+
+    // Character movement
+    // Arrow keys remain available
+    // alt+h / alt+l add a Vim-like alternative
+    "input_move_left": "left,ctrl+b,alt+h",
+    "input_move_right": "right,ctrl+f,alt+l",
+    "input_move_up": "up",
+    "input_move_down": "down",
+
+    // Selection
+    "input_select_left": "shift+left",
+    "input_select_right": "shift+right",
+    "input_select_up": "shift+up",
+    "input_select_down": "shift+down",
+
+    // Current logical line
+    "input_line_home": "ctrl+a",
+    "input_line_end": "ctrl+e",
+    "input_select_line_home": "ctrl+shift+a",
+    "input_select_line_end": "ctrl+shift+e",
+
+    // Current wrapped visual line
+    "input_visual_line_home": "alt+a",
+    "input_visual_line_end": "alt+e",
+    "input_select_visual_line_home": "alt+shift+a",
+    "input_select_visual_line_end": "alt+shift+e",
+
+    // Entire input buffer
+    "input_buffer_home": "home",
+    "input_buffer_end": "end",
+    "input_select_buffer_home": "shift+home",
+    "input_select_buffer_end": "shift+end",
+
+    // Deletion
+    "input_delete_line": "ctrl+shift+d",
+    "input_delete_to_line_end": "ctrl+k",
+    "input_delete_to_line_start": "ctrl+u",
+    "input_backspace": "backspace,shift+backspace",
+    "input_delete": "ctrl+d,delete,shift+delete",
+
+    // Prompt-local undo and redo
+    "input_undo": "ctrl+-,super+z",
+    "input_redo": "ctrl+.,super+shift+z",
+
+    // Word movement
+    "input_word_forward": "alt+f,alt+right,ctrl+right",
+    "input_word_backward": "alt+b,alt+left,ctrl+left",
+    "input_select_word_forward": "alt+shift+f,alt+shift+right",
+    "input_select_word_backward": "alt+shift+b,alt+shift+left",
+
+    // Word deletion
+    "input_delete_word_forward": "alt+d,alt+delete,ctrl+delete",
+    "input_delete_word_backward": "ctrl+w,ctrl+backspace,alt+backspace",
+
+    // Select all
+    "input_select_all": "super+a",
+
+    // Prompt history
+    "history_previous": "up",
+    "history_next": "down",
+
+    // ============================================================
+    // Autocomplete
+    // ============================================================
+
+    "prompt.autocomplete.prev": "up,ctrl+p",
+    "prompt.autocomplete.next": "down,ctrl+n",
+    "prompt.autocomplete.hide": "escape",
+    "prompt.autocomplete.select": "return",
+    "prompt.autocomplete.complete": "tab",
+
+    // ============================================================
+    // Selection dialogs
+    // ============================================================
+
+    "dialog.select.prev": "up,ctrl+p",
+    "dialog.select.next": "down,ctrl+n",
+    "dialog.select.page_up": "pageup",
+    "dialog.select.page_down": "pagedown",
+    "dialog.select.home": "home",
+    "dialog.select.end": "end",
+    "dialog.select.submit": "return",
+    "dialog.prompt.submit": "return",
+
+    // Provider/plugin dialogs may still use these contextual keys
+    "dialog.mcp.toggle": "none",
+    "permission.prompt.fullscreen": "ctrl+f",
+
+    // ============================================================
+    // Terminal behavior
+    // ============================================================
+
+    // Preserve normal shell job-control behavior
+    "terminal_suspend": "ctrl+z"
+  }
+}
