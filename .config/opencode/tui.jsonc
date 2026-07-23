@@ -31,7 +31,7 @@
     // Command palette
     "command_list": "<leader>space",
 
-    "help_show": "<leader>?",
+    "help_show": "none",
     "docs_open": "none",
 
     // Development and diagnostic commands I do not plan to use
@@ -171,20 +171,24 @@
     // ============================================================
 
     // Line movement
-    "messages_line_up": "<leader>k",
-    "messages_line_down": "<leader>j",
+    "messages_line_up": "alt+k",
+    "messages_line_down": "alt+j",
+
+    // Full-page movement
+    "messages_page_up": "pageup",
+    "messages_page_down": "pagedown",
 
     // Half-page movement
-    "messages_half_page_up": "<leader>u",
-    "messages_half_page_down": "<leader>d",
+    "messages_half_page_up": "alt+u",
+    "messages_half_page_down": "alt+d",
 
     // Jump to boundaries
-    "messages_first": "<leader>g,home",
+    "messages_first": "<leader>gg,home",
     "messages_last": "<leader>shift+g,end",
 
     // Move between individual messages
-    "messages_next": "<leader>n",
-    "messages_previous": "<leader>p",
+    "messages_next": "alt+n",
+    "messages_previous": "alt+p",
     "messages_last_user": "<leader>gu",
 
     // Message operations
@@ -196,10 +200,6 @@
     // Inspection
     "tool_details": "<leader>v",
     "display_thinking": "<leader>r",
-
-    // I do not need full-page movement
-    "messages_page_up": "none",
-    "messages_page_down": "none",
 
     // ============================================================
     // Prompt-level features
