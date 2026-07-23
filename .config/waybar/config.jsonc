@@ -9,6 +9,7 @@
   "modules-right": [
     "group/tray-expander",
     "custom/airpods",
+    "custom/voxtype",
     "bluetooth",
     "network",
     "pulseaudio",
@@ -65,6 +66,12 @@
         "connecting": "󱘖"
     },
     "on-click": "pkill -USR1 -f 'airpods\\.py'",
+    "tooltip": true
+  },
+  "custom/voxtype": {
+    "exec": "voxtype status --follow --format json --extended",
+    "return-type": "json",
+    "format": "{}",
     "tooltip": true
   },
   "custom/fanspeed": {
