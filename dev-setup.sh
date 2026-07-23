@@ -8,6 +8,8 @@ DOTFILES_REPO="https://github.com/druejaramillo/dotfiles.git"
 DOTFILES_DIR="$HOME/.dotfiles"
 DOTFILES_BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.4"
+VOXTYPE_REPO="https://github.com/peteonrails/voxtype.git"
+VOXTYPE_DIR="$HOME/.local/src/voxtype"
 
 #######################################
 # Logging
@@ -120,7 +122,8 @@ install_base_packages_linux() {
       zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
       build-essential ripgrep neovim python3 python3-pip python3-venv \
       postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
-      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find fzf ruby tmux
+      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find fzf ruby tmux \
+      cmake clang libasound2-dev libclang-dev wtype
     ;;
   dnf)
     sudo_if_needed dnf install -y \
@@ -128,19 +131,22 @@ install_base_packages_linux() {
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
       postgresql postgresql-server postgresql-contrib \
       pkgconf-pkg-config openssl-devel readline-devel zlib-devel \
-      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find fzf ruby tmux
+      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find fzf ruby tmux \
+      cmake clang-devel alsa-lib-devel wtype
     ;;
   pacman)
     sudo_if_needed pacman -S --noconfirm \
       zsh git curl wget unzip tar xz ca-certificates gnupg \
       base-devel ripgrep neovim python python-pip \
-      postgresql luarocks fontconfig fd fzf ruby tmux
+      postgresql luarocks fontconfig fd fzf ruby tmux \
+      alsa-lib clang cmake pkgconf wtype
     ;;
   zypper)
     sudo_if_needed zypper install -y \
       zsh git curl wget unzip tar xz ca-certificates gpg2 \
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
-      postgresql postgresql-server luarocks fontconfig fd fzf ruby tmux
+      postgresql postgresql-server luarocks fontconfig fd fzf ruby tmux \
+      cmake clang alsa-devel libclang-devel pkg-config wtype
     ;;
   esac
 }
@@ -414,6 +420,28 @@ install_opencode() {
   curl -fsSL https://opencode.ai/install | bash
 }
 
+install_voxtype_linux() {
+  ensure_local_bin_on_path
+
+  if [[ -d "$VOXTYPE_DIR" ]]; then
+    if [[ ! -f "$VOXTYPE_DIR/Cargo.toml" ]]; then
+      err "Voxtype directory exists but is not a Rust project: $VOXTYPE_DIR"
+      exit 1
+    fi
+  else
+    log "Cloning Voxtype"
+    mkdir -p "$(dirname "$VOXTYPE_DIR")"
+    git clone "$VOXTYPE_REPO" "$VOXTYPE_DIR"
+  fi
+
+  log "Building Voxtype"
+  cargo build --release --manifest-path "$VOXTYPE_DIR/Cargo.toml"
+  install -m 0755 "$VOXTYPE_DIR/target/release/voxtype" "$HOME/.local/bin/voxtype"
+
+  log "Downloading Voxtype Whisper model"
+  "$HOME/.local/bin/voxtype" setup --download
+}
+
 install_try_cli() {
   if have try; then
     return
@@ -548,6 +576,7 @@ Installed / configured:
   - ruby + try-cli
   - nvm + Node.js + npm
   - OpenCode
+  - Voxtype (Linux)
   - python
   - postgres
   - neovim
@@ -578,7 +607,8 @@ Recommended next steps:
        try --version
        node --version
        npm --version
-       opencode --version || true
+        opencode --version || true
+        voxtype --version || true
        python3 --version
        psql --version
        nvim --version
@@ -613,6 +643,9 @@ main() {
   install_rust
   install_tree_sitter_cli
   install_opencode
+  if [[ "$OS" == "linux" ]]; then
+    install_voxtype_linux
+  fi
   install_try_cli
   clone_dotfiles
   change_default_shell_to_zsh
