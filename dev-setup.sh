@@ -10,6 +10,7 @@ DOTFILES_BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.4"
 VOXTYPE_REPO="https://github.com/peteonrails/voxtype.git"
 VOXTYPE_DIR="$HOME/.local/src/voxtype"
+SETUP_PROFILE="personal"
 
 #######################################
 # Logging
@@ -22,6 +23,39 @@ err() { printf "\n\033[1;31mERROR:\033[0m %s\n" "$*" >&2; }
 # Helpers
 #######################################
 have() { command -v "$1" >/dev/null 2>&1; }
+
+is_server() { [[ "$SETUP_PROFILE" == "server" ]]; }
+
+usage() {
+  cat <<'EOF'
+Usage: bash dev-setup.sh [--server]
+
+Profiles:
+  personal  Default. Installs the complete local development environment.
+  --server  Linux SSH development server. Skips Voxtype, its audio/input
+            dependencies, and local terminal fonts.
+EOF
+}
+
+parse_args() {
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+    --server)
+      SETUP_PROFILE="server"
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      err "Unknown option: $1"
+      usage >&2
+      exit 2
+      ;;
+    esac
+    shift
+  done
+}
 
 append_line_if_missing() {
   local line="$1"
@@ -122,8 +156,11 @@ install_base_packages_linux() {
       zsh git curl wget unzip tar xz-utils ca-certificates gnupg lsb-release \
       build-essential ripgrep neovim python3 python3-pip python3-venv \
       postgresql postgresql-client pkg-config libssl-dev libreadline-dev zlib1g-dev \
-      libyaml-dev libffi-dev libgdbm-dev luarocks fontconfig fd-find fzf ruby tmux \
-      cmake clang libasound2-dev libclang-dev wtype
+      libyaml-dev libffi-dev libgdbm-dev luarocks fd-find fzf ruby tmux \
+      cmake clang libclang-dev
+    if ! is_server; then
+      sudo_if_needed "$PKG_MGR" install -y fontconfig libasound2-dev wtype
+    fi
     ;;
   dnf)
     sudo_if_needed dnf install -y \
@@ -131,22 +168,31 @@ install_base_packages_linux() {
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
       postgresql postgresql-server postgresql-contrib \
       pkgconf-pkg-config openssl-devel readline-devel zlib-devel \
-      libyaml-devel libffi-devel gdbm-devel luarocks fontconfig fd-find fzf ruby tmux \
-      cmake clang-devel alsa-lib-devel wtype
+      libyaml-devel libffi-devel gdbm-devel luarocks fd-find fzf ruby tmux \
+      cmake clang-devel
+    if ! is_server; then
+      sudo_if_needed dnf install -y fontconfig alsa-lib-devel wtype
+    fi
     ;;
   pacman)
     sudo_if_needed pacman -S --noconfirm \
       zsh git curl wget unzip tar xz ca-certificates gnupg \
       base-devel ripgrep neovim python python-pip \
-      postgresql luarocks fontconfig fd fzf ruby tmux \
-      alsa-lib clang cmake pkgconf wtype
+      postgresql luarocks fd fzf ruby tmux \
+      clang cmake pkgconf
+    if ! is_server; then
+      sudo_if_needed pacman -S --noconfirm fontconfig alsa-lib wtype
+    fi
     ;;
   zypper)
     sudo_if_needed zypper install -y \
       zsh git curl wget unzip tar xz ca-certificates gpg2 \
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
-      postgresql postgresql-server luarocks fontconfig fd fzf ruby tmux \
-      cmake clang alsa-devel libclang-devel pkg-config wtype
+      postgresql postgresql-server luarocks fd fzf ruby tmux \
+      cmake clang libclang-devel pkg-config
+    if ! is_server; then
+      sudo_if_needed zypper install -y fontconfig alsa-devel wtype
+    fi
     ;;
   esac
 }
@@ -576,6 +622,8 @@ print_summary() {
 
 Done.
 
+Setup profile: $SETUP_PROFILE
+
 Installed / configured:
   - zsh
   - Oh My Zsh
@@ -587,7 +635,6 @@ Installed / configured:
   - docker
   - lazygit
   - lazydocker
-  - FiraCode Nerd Font
   - tree-sitter-cli
   - C compiler / build tools
   - luarocks
@@ -598,11 +645,31 @@ Installed / configured:
   - ruby + try-cli
   - nvm + Node.js + npm
   - OpenCode
-  - Voxtype (Linux)
   - python
   - postgres
   - neovim
   - bare dotfiles checkout
+EOF
+
+  if is_server; then
+    cat <<'EOF'
+
+Skipped for the server profile:
+  - FiraCode Nerd Font and fontconfig
+  - Voxtype, its Whisper model, ALSA development headers, and wtype
+EOF
+  else
+    cat <<'EOF'
+
+Also installed:
+  - FiraCode Nerd Font
+EOF
+    if [[ "$OS" == "linux" ]]; then
+      printf '%s\n' '  - Voxtype (Linux)'
+    fi
+  fi
+
+  cat <<EOF
 
 Recommended next steps:
   1. Start a new shell:
@@ -633,20 +700,28 @@ Recommended next steps:
        node --version
        npm --version
        tailscale version || true
-        opencode --version || true
-        voxtype --version || true
+       opencode --version || true
        python3 --version
        psql --version
        nvim --version
-
 EOF
+
+  if ! is_server && [[ "$OS" == "linux" ]]; then
+    printf '%s\n' '       voxtype --version || true'
+  fi
 }
 
 #######################################
 # Main
 #######################################
 main() {
+  parse_args "$@"
   detect_os
+
+  if is_server && [[ "$OS" != "linux" ]]; then
+    err "The --server profile is only supported on Linux. Run without --server for macOS."
+    exit 1
+  fi
 
   if [[ "$OS" == "linux" ]]; then
     detect_linux_pkg_mgr
@@ -657,7 +732,9 @@ main() {
     install_docker_linux
     install_lazygit_linux
     install_lazydocker_linux
-    install_firacode_nerd_font_linux
+    if ! is_server; then
+      install_firacode_nerd_font_linux
+    fi
     setup_fd_symlink
   else
     install_homebrew_if_needed_macos
@@ -670,7 +747,7 @@ main() {
   install_rust
   install_tree_sitter_cli
   install_opencode
-  if [[ "$OS" == "linux" ]]; then
+  if [[ "$OS" == "linux" ]] && ! is_server; then
     install_voxtype_linux
   fi
   install_try_cli

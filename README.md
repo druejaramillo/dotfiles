@@ -35,7 +35,15 @@ Two scripts handle everything on a fresh machine.
 bash dev-setup.sh
 ```
 
-This installs zsh, Oh My Zsh, Starship, git, Docker, lazygit, lazydocker, nvm + Node.js, neovim, ripgrep, fd, fzf, Ruby + try-cli, tree-sitter, luarocks, PostgreSQL, Python, FiraCode Nerd Font, and OpenCode. It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
+The default personal profile installs the complete local development environment, including Voxtype and FiraCode Nerd Font. It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
+
+For a Linux server accessed over SSH, use the server profile:
+
+```bash
+bash dev-setup.sh --server
+```
+
+It retains the development and terminal tooling, Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips FiraCode Nerd Font and `fontconfig`, plus Voxtype, its Whisper model, its ALSA development dependency, and `wtype`. The `--server` profile is Linux-only; macOS continues to use the default profile.
 
 > **Note:** nvm and node will not be available until you start a new shell after the script finishes.
 
@@ -153,26 +161,28 @@ dotfiles push
 
 ## What dev-setup.sh installs
 
-| Tool | Purpose |
-|------|---------|
-| zsh + Oh My Zsh | Shell |
-| Starship | Shell prompt |
-| git | Version control |
-| Docker | Containers |
-| lazygit | Terminal Git UI |
-| lazydocker | Terminal Docker UI |
-| nvm + Node.js + npm | Node version management |
-| tree-sitter-cli | Syntax parsing (neovim) |
-| neovim | Editor |
-| ripgrep | Fast grep |
-| fd | Fast find |
-| fzf | Fuzzy finder |
-| Ruby + try-cli | Try workspace manager |
-| luarocks | Lua package manager |
-| Python 3 | Scripting |
-| PostgreSQL | Database |
-| FiraCode Nerd Font | Terminal font |
-| OpenCode | AI coding agent |
+| Tool | Purpose | Profile |
+|------|---------|---------|
+| zsh + Oh My Zsh | Shell | Both |
+| Starship | Shell prompt | Both |
+| git | Version control | Both |
+| Go, Rust, C compiler, CMake, Clang, pkg-config | Native development | Both |
+| Docker + lazydocker | Containers | Both |
+| PostgreSQL | Database | Both |
+| Tailscale | Private networking | Both |
+| lazygit | Terminal Git UI | Both |
+| nvm + Node.js + npm | Node version management | Both |
+| tree-sitter-cli | Syntax parsing (neovim) | Both |
+| neovim | Editor | Both |
+| ripgrep | Fast grep | Both |
+| fd | Fast find | Both |
+| fzf | Fuzzy finder | Both |
+| Ruby + try-cli | Try workspace manager | Both |
+| luarocks | Lua package manager | Both |
+| Python 3 | Scripting | Both |
+| OpenCode | AI coding agent | Both |
+| FiraCode Nerd Font | Terminal font | Personal |
+| Voxtype | Local voice dictation | Personal Linux |
 
 ---
 
