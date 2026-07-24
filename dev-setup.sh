@@ -325,6 +325,27 @@ install_base_packages_macos() {
 #######################################
 # Shared installs
 #######################################
+install_tailscale() {
+  if have tailscale || [[ -d "/Applications/Tailscale.app" ]]; then
+    log "Tailscale already installed"
+    return
+  fi
+
+  if [[ "$OS" == "linux" ]]; then
+    log "Installing Tailscale using its official installer"
+    curl -fsSL https://tailscale.com/install.sh | sh
+    return
+  fi
+
+  log "Installing Tailscale standalone app"
+  local pkg_path tmpdir
+  tmpdir="$(mktemp -d)"
+  pkg_path="$tmpdir/Tailscale.pkg"
+  curl -fsSL -o "$pkg_path" https://pkgs.tailscale.com/stable/Tailscale-latest-macos.pkg
+  sudo_if_needed installer -pkg "$pkg_path" -target /
+  rm -rf "$tmpdir"
+}
+
 install_oh_my_zsh() {
   if [[ -d "$HOME/.oh-my-zsh" ]]; then
     log "Oh My Zsh already installed"
@@ -562,6 +583,7 @@ Installed / configured:
   - git
   - go
   - rust
+  - Tailscale
   - docker
   - lazygit
   - lazydocker
@@ -586,7 +608,10 @@ Recommended next steps:
   1. Start a new shell:
        exec zsh
   2. If Docker was newly installed on Linux, log out/in for docker group access
-  3. Verify:
+  3. Sign in to Tailscale:
+       Linux: sudo tailscale up
+       macOS: open -a Tailscale
+  4. Verify:
        zsh --version
        starship --version
        git --version
@@ -607,6 +632,7 @@ Recommended next steps:
        try --version
        node --version
        npm --version
+       tailscale version || true
         opencode --version || true
         voxtype --version || true
        python3 --version
@@ -638,6 +664,7 @@ main() {
     install_base_packages_macos
   fi
 
+  install_tailscale
   install_oh_my_zsh
   install_nvm_node
   install_rust

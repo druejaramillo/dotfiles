@@ -51,7 +51,7 @@ alias lzd='lazydocker'
 alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@192.168.40.165'
 
 # SSH into my Hetzner web server
-alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@5.78.180.182'
+alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@100.123.104.114'
 
 # Add Go bin directory to PATH
 export PATH="$PATH:/usr/local/go/bin"
@@ -87,7 +87,7 @@ export GPG_TTY=$(tty)
 eval "$(starship init zsh)"
 
 # Try
-eval "$(try init ~/Work/tries)"
+eval "$(try init ~/Work/tries)" || true
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
