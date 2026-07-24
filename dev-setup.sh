@@ -487,6 +487,11 @@ install_opencode() {
   curl -fsSL https://opencode.ai/install | bash
 }
 
+install_plannotator() {
+  log "Installing Plannotator"
+  curl -fsSL https://plannotator.ai/install.sh | bash
+}
+
 install_voxtype_linux() {
   ensure_local_bin_on_path
 
@@ -645,6 +650,7 @@ Installed / configured:
   - ruby + try-cli
   - nvm + Node.js + npm
   - OpenCode
+  - Plannotator
   - python
   - postgres
   - neovim
@@ -747,6 +753,7 @@ main() {
   install_rust
   install_tree_sitter_cli
   install_opencode
+  install_plannotator
   if [[ "$OS" == "linux" ]] && ! is_server; then
     install_voxtype_linux
   fi

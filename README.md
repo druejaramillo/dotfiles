@@ -181,6 +181,7 @@ dotfiles push
 | luarocks | Lua package manager | Both |
 | Python 3 | Scripting | Both |
 | OpenCode | AI coding agent | Both |
+| Plannotator | AI plan review | Both |
 | FiraCode Nerd Font | Terminal font | Personal |
 | Voxtype | Local voice dictation | Personal Linux |
 
