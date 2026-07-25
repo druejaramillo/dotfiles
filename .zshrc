@@ -18,6 +18,13 @@ fi
 
 # Dotfiles
 alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+# Honestly, I'm really lazy and hate typing these out every time
+alias dfs='dotfiles status'
+alias dfr='dotfiles reset'
+alias dfa='dotfiles add'
+alias dfc='dotfiles commit'
+alias dfp='dotfiles push'
+alias dfl='dotfiles pull'
 
 # fzf
 source <(fzf --zsh)
