@@ -3,7 +3,9 @@ description: Runs one approved code-oriented workflow phase and stops at its req
 mode: primary
 permission:
   edit: allow
-  submit_plan: deny
+  question: allow
+  skill: allow
+  todowrite: allow
   external_directory:
     "*": deny
     "~/.config/opencode/**": allow

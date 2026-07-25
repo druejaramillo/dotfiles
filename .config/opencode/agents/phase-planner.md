@@ -3,6 +3,9 @@ description: Runs Phase 1 discovery and submits the reviewed implementation plan
 mode: primary
 permission:
   edit: deny
+  question: allow
+  skill: allow
+  todowrite: allow
   external_directory:
     "*": deny
     "~/.config/opencode/**": allow
@@ -24,7 +27,6 @@ permission:
     "*": deny
     explore: allow
     phase-adversarial-reviewer: allow
-  submit_plan: allow
 ---
 
 You own only Phase 1, Discovery. Read `~/.config/opencode/WORKFLOW.md` before

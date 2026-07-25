@@ -5,7 +5,7 @@
     [
       "@plannotator/opencode@latest",
       {
-        "workflow": "user-managed",
+        "workflow": "plan-agent",
         "planningAgents": ["phase-planner"]
       }
     ]
@@ -44,35 +44,5 @@
   },
   "model": "openai/gpt-5.6-terra",
   "small_model": "openai/gpt-5.4-nano",
-  "default_agent": "phase-planner",
-  "permission": {
-    "read": {
-      "*": "allow",
-      "*.env": "deny",
-      "*.env.*": "deny",
-      "*.env.example": "allow"
-    },
-    "glob": "allow",
-    "grep": "allow",
-    "list": "allow",
-    "question": "allow",
-    "todowrite": "allow",
-    "skill": "allow",
-    "submit_plan": "deny",
-    "edit": "ask",
-    "task": "ask",
-    "external_directory": {
-      "*": "deny",
-      "~/.config/opencode/**": "allow"
-    },
-    "bash": {
-      "*": "ask",
-      "git status*": "allow",
-      "git diff*": "allow",
-      "git log*": "allow",
-      "git show*": "allow",
-      "git rev-parse*": "allow",
-      "git branch --show-current*": "allow"
-    }
-  }
+  "default_agent": "phase-planner"
 }

@@ -4,7 +4,6 @@ mode: subagent
 hidden: true
 permission:
   edit: deny
-  submit_plan: deny
   task: deny
   skill: deny
   question: deny
