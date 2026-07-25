@@ -57,6 +57,14 @@ alias dc='docker compose'
 alias dsp='docker system prune'
 alias lzd='lazydocker'
 
+# Tmux alias commands
+alias tml='tmux ls'
+alias tma='tmux attach'
+alias tmd='tmux detach'
+alias tmn='tmux new'
+alias tmk='tmux kill-session'
+alias tmlk='tmux list-keys'
+
 # SSH into my local web server
 alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@192.168.40.165'
 
