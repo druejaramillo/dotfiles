@@ -20,6 +20,7 @@ fi
 alias dotfiles='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 # Honestly, I'm really lazy and hate typing these out every time
 alias dfs='dotfiles status'
+alias dfd='dotfiles diff'
 alias dfr='dotfiles reset'
 alias dfa='dotfiles add'
 alias dfc='dotfiles commit'
