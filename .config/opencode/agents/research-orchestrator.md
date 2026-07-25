@@ -10,6 +10,7 @@ permission:
   edit:
     "*": deny
     "research/**": allow
+    "*/research/*": allow
   bash:
     "*": deny
     "mkdir *": allow

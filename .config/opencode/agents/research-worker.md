@@ -11,6 +11,7 @@ permission:
   edit:
     "*": deny
     "research/**": allow
+    "*/research/*": allow
   bash: deny
   task: deny
   question: deny
