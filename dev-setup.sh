@@ -492,6 +492,16 @@ install_plannotator() {
   curl -fsSL https://plannotator.ai/install.sh | bash
 }
 
+install_tpm() {
+  if [[ -d "$HOME/.tmux/plugins/tpm" ]]; then
+    log "Tmux Plugin Manager already installed"
+    return
+  fi
+
+  log "Installing Tmux Plugin Manager"
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+}
+
 install_voxtype_linux() {
   ensure_local_bin_on_path
 
@@ -649,9 +659,10 @@ Installed / configured:
   - tmux
   - ruby + try-cli
   - nvm + Node.js + npm
-  - OpenCode
-  - Plannotator
-  - python
+   - OpenCode
+   - Plannotator
+   - Tmux Plugin Manager
+   - python
   - postgres
   - neovim
   - bare dotfiles checkout
@@ -754,6 +765,7 @@ main() {
   install_tree_sitter_cli
   install_opencode
   install_plannotator
+  install_tpm
   if [[ "$OS" == "linux" ]] && ! is_server; then
     install_voxtype_linux
   fi
