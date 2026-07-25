@@ -1,1 +1,2 @@
 .config/hypr/hyprland.conf filter=stripmonitor
+.zshenv filter=stripapikeys

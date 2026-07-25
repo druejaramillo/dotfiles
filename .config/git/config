@@ -40,3 +40,6 @@
 [filter "stripmonitor"]
   clean = grep -v '^monitor='
   smudge = cat
+[filter "stripapikeys"]
+  clean = grep -v 'API_KEY'
+  smudge = cat
