@@ -10,6 +10,8 @@ DOTFILES_BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.4"
 VOXTYPE_REPO="https://github.com/peteonrails/voxtype.git"
 VOXTYPE_DIR="$HOME/.local/src/voxtype"
+HYPRULER_REPO="https://github.com/t4t5/hypruler.git"
+HYPRULER_DIR="$HOME/.local/src/hypruler"
 SETUP_PROFILE="personal"
 
 #######################################
@@ -349,6 +351,39 @@ install_firacode_nerd_font_linux() {
   rm -rf "$tmpdir"
 }
 
+install_hypruler_linux() {
+  if have hypruler || [[ -x "$HOME/.cargo/bin/hypruler" ]]; then
+    log "Hypruler already installed"
+    return
+  fi
+
+  if [[ "$PKG_MGR" == "pacman" ]]; then
+    if ! have yay; then
+      warn "Skipping Hypruler: yay is not installed"
+      return
+    fi
+
+    log "Installing Hypruler from the AUR"
+    yay -S --needed --noconfirm hypruler-bin
+    return
+  fi
+
+  if [[ -d "$HYPRULER_DIR" ]]; then
+    if [[ ! -f "$HYPRULER_DIR/Cargo.toml" ]]; then
+      err "Hypruler directory exists but is not a Rust project: $HYPRULER_DIR"
+      exit 1
+    fi
+  else
+    log "Cloning Hypruler"
+    mkdir -p "$(dirname "$HYPRULER_DIR")"
+    git clone "$HYPRULER_REPO" "$HYPRULER_DIR"
+  fi
+
+  log "Building Hypruler"
+  cargo build --release --manifest-path "$HYPRULER_DIR/Cargo.toml"
+  cargo install --path "$HYPRULER_DIR"
+}
+
 #######################################
 # macOS packages
 #######################################
@@ -683,6 +718,13 @@ Also installed:
 EOF
     if [[ "$OS" == "linux" ]]; then
       printf '%s\n' '  - Voxtype (Linux)'
+      if have hypruler || [[ -x "$HOME/.cargo/bin/hypruler" ]]; then
+        if [[ "$PKG_MGR" == "pacman" ]]; then
+          printf '%s\n' '  - Hypruler (AUR)'
+        else
+          printf '%s\n' '  - Hypruler (source)'
+        fi
+      fi
     fi
   fi
 
@@ -762,6 +804,9 @@ main() {
   install_oh_my_zsh
   install_nvm_node
   install_rust
+  if [[ "$OS" == "linux" ]] && ! is_server; then
+    install_hypruler_linux
+  fi
   install_tree_sitter_cli
   install_opencode
   install_plannotator
