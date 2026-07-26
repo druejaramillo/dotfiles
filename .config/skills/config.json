@@ -1,0 +1,12 @@
+{
+  "default_source": "local",
+  "sources": {
+    "local": {
+      "location": "/home/drue/Projects/skills",
+      "remote": false
+    }
+  },
+  "creator": {
+    "model": "openai/gpt-5.6-terra"
+  }
+}

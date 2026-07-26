@@ -577,6 +577,21 @@ install_try_cli() {
   fi
 }
 
+install_skills_cli() {
+  if ! have go; then
+    err "Go is required to install skills-cli"
+    exit 1
+  fi
+
+  local go_bin
+  go_bin="$(go env GOPATH)/bin"
+  append_line_if_missing 'export PATH="$HOME/go/bin:$PATH"' "$HOME/.zshrc"
+  export PATH="$go_bin:$PATH"
+
+  log "Installing skills-cli"
+  go install github.com/druejaramillo/skills-cli/cmd/skills@latest
+}
+
 setup_fd_symlink() {
   if have fd; then
     return
@@ -692,15 +707,16 @@ Installed / configured:
   - fd
   - fzf
   - tmux
-  - ruby + try-cli
-  - nvm + Node.js + npm
-   - OpenCode
-   - Plannotator
-   - Tmux Plugin Manager
-   - python
-  - postgres
-  - neovim
-  - bare dotfiles checkout
+   - ruby + try-cli
+   - skills-cli
+   - nvm + Node.js + npm
+    - OpenCode
+    - Plannotator
+    - Tmux Plugin Manager
+    - python
+   - postgres
+   - neovim
+   - bare dotfiles checkout
 EOF
 
   if is_server; then
@@ -756,6 +772,7 @@ Recommended next steps:
        tmux -V
        ruby --version
        try --version
+       skills --version || true
        node --version
        npm --version
        tailscale version || true
@@ -815,6 +832,7 @@ main() {
     install_voxtype_linux
   fi
   install_try_cli
+  install_skills_cli
   clone_dotfiles
   change_default_shell_to_zsh
   setup_postgres
