@@ -49,8 +49,25 @@ export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 # Add Mason bin folder to PATH
 export PATH="$PATH:$HOME/.local/share/nvim/mason/bin"
 
-# OpenCode alias
-alias oc='opencode'
+# OpenCode alias command
+function oc() {
+  if [[ -n "${TMUX:-}" ]]; then
+    local env_commands
+
+    env_commands="$(
+      {
+        command tmux show-environment -s PLANNOTATOR_REMOTE 2>/dev/null
+        command tmux show-environment -s PLANNOTATOR_PORT 2>/dev/null
+      }
+    )"
+
+    if [[ -n "${env_commands}" ]]; then
+      eval "$env_commands"
+    fi
+  fi
+
+  command opencode "$@"
+}
 
 # Docker alias commands
 alias d='docker'
@@ -60,11 +77,22 @@ alias lzd='lazydocker'
 
 # Tmux alias commands
 alias tml='tmux ls'
-alias tma='tmux attach'
 alias tmd='tmux detach'
 alias tmn='tmux new'
 alias tmk='tmux kill-session'
 alias tmlk='tmux list-keys'
+
+function tma() {
+  if [[ -n "${SSH_CONNECTION:-}" || -n "${SSH_TTY:-}" ]]; then
+    export PLANNOTATOR_REMOTE=1
+    export PLANNOTATOR_PORT='19432-19463'
+  else
+    export PLANNOTATOR_REMOTE=0
+    unset PLANNOTATOR_PORT
+  fi
+
+  command tmux attach "$@"
+}
 
 # SSH into my local web server
 alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@192.168.40.165'
