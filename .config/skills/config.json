@@ -1,9 +1,17 @@
 {
   "default_source": "local",
   "sources": {
+    "impeccable": {
+      "location": "https://github.com/pbakaus/impeccable.git",
+      "remote": true
+    },
     "local": {
       "location": "/home/drue/Projects/skills",
       "remote": false
+    },
+    "taste": {
+      "location": "https://github.com/Leonxlnx/taste-skill.git",
+      "remote": true
     }
   },
   "creator": {
