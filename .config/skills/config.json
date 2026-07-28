@@ -1,11 +1,15 @@
 {
-  "default_source": "local",
+  "default_source": "main",
   "sources": {
     "impeccable": {
       "location": "https://github.com/pbakaus/impeccable.git",
       "remote": true
     },
-    "local": {
+    "inspo": {
+      "location": "/home/drue/Projects/design-inspo",
+      "remote": false
+    },
+    "main": {
       "location": "/home/drue/Projects/skills",
       "remote": false
     },
