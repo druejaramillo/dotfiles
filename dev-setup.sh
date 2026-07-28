@@ -141,7 +141,7 @@ update_system_packages_linux() {
     sudo_if_needed dnf makecache
     ;;
   pacman)
-    sudo_if_needed pacman -Sy --noconfirm
+    sudo_if_needed pacman -Syu --noconfirm
     ;;
   zypper)
     sudo_if_needed zypper refresh
@@ -177,7 +177,7 @@ install_base_packages_linux() {
     fi
     ;;
   pacman)
-    sudo_if_needed pacman -S --noconfirm \
+    sudo_if_needed pacman -S --needed --noconfirm \
       zsh git curl wget unzip tar xz ca-certificates gnupg \
       base-devel ripgrep neovim python python-pip \
       postgresql luarocks fd fzf ruby tmux \

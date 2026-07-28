@@ -217,7 +217,7 @@ install_linux_packages() {
       sudo_if_needed dnf install -y git gh gnupg2 pinentry ca-certificates curl
       ;;
     pacman)
-      sudo_if_needed pacman -Sy --needed --noconfirm git github-cli gnupg pinentry ca-certificates curl
+      sudo_if_needed pacman -Syu --needed --noconfirm git github-cli gnupg pinentry ca-certificates curl
       ;;
     zypper)
       sudo_if_needed zypper install -y git gh gpg2 pinentry ca-certificates curl
