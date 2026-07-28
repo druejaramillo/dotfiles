@@ -141,6 +141,8 @@ update_system_packages_linux() {
     sudo_if_needed dnf makecache
     ;;
   pacman)
+    # Refresh signing keys before the required full system upgrade.
+    sudo_if_needed pacman -Sy --needed --noconfirm archlinux-keyring
     sudo_if_needed pacman -Syu --noconfirm
     ;;
   zypper)

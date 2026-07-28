@@ -217,6 +217,8 @@ install_linux_packages() {
       sudo_if_needed dnf install -y git gh gnupg2 pinentry ca-certificates curl
       ;;
     pacman)
+      # Refresh signing keys before the required full system upgrade.
+      sudo_if_needed pacman -Sy --needed --noconfirm archlinux-keyring
       sudo_if_needed pacman -Syu --needed --noconfirm git github-cli gnupg pinentry ca-certificates curl
       ;;
     zypper)
