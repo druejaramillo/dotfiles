@@ -95,7 +95,7 @@ function tma() {
 }
 
 # SSH into my local web server
-alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@192.168.40.165'
+alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@100.95.207.59'
 
 # SSH into my Hetzner web server
 alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@100.123.104.114'
