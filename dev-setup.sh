@@ -555,6 +555,8 @@ install_voxtype_linux() {
 
   # whisper.cpp triggers an internal compiler error in GCC 16 at -O3.
   log "Building Voxtype with Clang"
+  # Remove any CMake cache created by a prior GCC build before switching compilers.
+  cargo clean --release --manifest-path "$VOXTYPE_DIR/Cargo.toml" -p whisper-rs-sys
   CC=clang CXX=clang++ cargo build --release --manifest-path "$VOXTYPE_DIR/Cargo.toml"
   install -m 0755 "$VOXTYPE_DIR/target/release/voxtype" "$HOME/.local/bin/voxtype"
 
