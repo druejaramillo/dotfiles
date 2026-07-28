@@ -553,8 +553,9 @@ install_voxtype_linux() {
     git clone "$VOXTYPE_REPO" "$VOXTYPE_DIR"
   fi
 
-  log "Building Voxtype"
-  cargo build --release --manifest-path "$VOXTYPE_DIR/Cargo.toml"
+  # whisper.cpp triggers an internal compiler error in GCC 16 at -O3.
+  log "Building Voxtype with Clang"
+  CC=clang CXX=clang++ cargo build --release --manifest-path "$VOXTYPE_DIR/Cargo.toml"
   install -m 0755 "$VOXTYPE_DIR/target/release/voxtype" "$HOME/.local/bin/voxtype"
 
   log "Downloading Voxtype Whisper model"
