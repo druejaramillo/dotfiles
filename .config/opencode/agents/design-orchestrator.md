@@ -42,10 +42,16 @@ CLI, image generator, or canonical artifact is unavailable, state that exact
 blocker instead of silently switching to a different workflow. Generate
 original local visual assets when the selected design skill requires them.
 
+For visual inspection of a local page or preview, use `web_screenshot` rather
+than composing Chromium or Playwright screenshot commands. Start with its
+responsive preset; use a single named preset only for a focused recheck. Inspect
+the returned image attachments before changing the implementation.
+
 Use separate `general` subagents for independent studies, family variants, and
 hero variants. Give every such subagent a non-overlapping output path, the
 relevant art-direction evidence, content constraints, and required checks.
-Never duplicate an assigned subagent's work in the parent thread.
+Require those visual-design subagents to use `web_screenshot` for their visual
+verification. Never duplicate an assigned subagent's work in the parent thread.
 
 Keep decisions explicit. Ask one concise question only when a missing choice
 would make the named phase unsafe or unusable. Verify the named phase with the
