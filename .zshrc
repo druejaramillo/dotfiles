@@ -27,6 +27,15 @@ alias dfc='dotfiles commit'
 alias dfp='dotfiles push'
 alias dfl='dotfiles pull'
 
+# Git
+alias gs='git status'
+alias gd='git diff'
+alias gr='git reset'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git pull'
+
 # fzf
 source <(fzf --zsh)
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --no-ignore-vcs'
