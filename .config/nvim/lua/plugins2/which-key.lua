@@ -48,6 +48,8 @@ return {
 				{ "<leader>p", group = "pomodoro", icon = "⏳", mode = "n" },
 				-- brianhuster/live-preview.nvim
 				{ "<leader>cp", group = "Live Preview", mode = "n" },
+				-- tris203/precognition.nvim
+				{ "<leader>up", group = "Precognition", icon = "👀", mode = "n" },
 				-- better descriptions
 				{ "gx", desc = "Open with system app" },
 			},

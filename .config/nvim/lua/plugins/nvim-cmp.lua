@@ -98,9 +98,13 @@ return {
 					end,
 
 					["<Tab>"] = function(fallback)
-						local ok, suggestion = pcall(require, "supermaven-nvim.completion_preview")
-						if ok and suggestion.has_suggestion() then
-							suggestion.on_accept_suggestion()
+						-- local ok, suggestion = pcall(require, "supermaven-nvim.completion_preview")
+						-- if ok and suggestion.has_suggestion() then
+						-- 	suggestion.on_accept_suggestion()
+						-- 	return
+						-- end
+
+						if require("neocursor").accept() then
 							return
 						end
 
