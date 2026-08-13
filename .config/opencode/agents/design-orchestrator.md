@@ -38,11 +38,12 @@ events, or operational details.
 
 Load `design-inspo`, `impeccable`, `design-taste-frontend`, and `handoff` only
 when the command calls for them and they are available. `gpt_imagegen` is
-available for still-image generation and `grok_imagine` for video generation;
-select the medium that serves the design. If a required skill, CLI, image or
-video generator, or canonical artifact is unavailable, state that exact blocker
-instead of silently switching to a different workflow. Generate original local
-visual assets when the selected design skill requires them.
+available for still-image generation. Do not use `grok_imagine` before the
+`/design-family-variants` phase; that command explicitly permits it as an
+option. If a required skill, CLI, permitted generator, or canonical artifact is
+unavailable, state that exact blocker instead of silently switching to a
+different workflow. Generate original local visual assets when the selected
+design skill requires them.
 
 For visual inspection of a local page or preview, use `web_screenshot` rather
 than composing Chromium or Playwright screenshot commands. Start with its

@@ -16,6 +16,11 @@ variant. Each variant must have its own folder and differ materially in at
 least one of: body composition, typography, spacing rhythm, material treatment,
 information architecture, or image staging.
 
+`grok_imagine` is available in this phase as an optional video-generation tool.
+Use it only when motion materially advances a variant's art direction; otherwise
+use `gpt_imagegen` for original still imagery or retain the approved source
+assets. Ensure any generated video has a reduced-motion-safe fallback.
+
 Extend the exploration host with compact entries for the variants. When a
 variant exists on only one design-skill side, present it full-width rather than
 inventing a baseline comparison. Validate the host route, all variant paths,

@@ -10,9 +10,9 @@ inspiration evidence before writing. Preserve the prototype unchanged.
 
 Load the applicable design skill and `design-inspo`. Launch one isolated
 `general` subagent per hero study. Each study must own its directory, generate
-or use its own original local image or video asset, fill a viewport as a
-standalone hero, and be intentionally distinct in composition, image crop,
-hierarchy, or information treatment while staying in the chosen family.
+or use its own original local visual asset, fill a viewport as a standalone
+hero, and be intentionally distinct in composition, image crop, hierarchy, or
+information treatment while staying in the chosen family.
 
 Create a self-contained hero-lab route that swaps studies in a full-viewport
 frame through an accessible floating picker centered near the bottom. Do not
