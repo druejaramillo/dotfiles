@@ -12,6 +12,8 @@ VOXTYPE_REPO="https://github.com/peteonrails/voxtype.git"
 VOXTYPE_DIR="$HOME/.local/src/voxtype"
 HYPRULER_REPO="https://github.com/t4t5/hypruler.git"
 HYPRULER_DIR="$HOME/.local/src/hypruler"
+WLUMA_VERSION="4.11.1"
+WLUMA_DIR="$HOME/.local/src/wluma-$WLUMA_VERSION"
 SETUP_PROFILE="personal"
 
 #######################################
@@ -386,6 +388,76 @@ install_hypruler_linux() {
   cargo install --path "$HYPRULER_DIR"
 }
 
+install_adaptive_brightness() {
+  if [[ "$OS" == "macos" ]]; then
+    if [[ -d "/Applications/Lumen.app" ]]; then
+      log "Lumen already installed"
+      return
+    fi
+
+    log "Installing Lumen"
+    brew install --cask anishathalye/tap/lumen
+    return
+  fi
+
+  if have wluma; then
+    log "wluma already installed"
+    return
+  fi
+
+  if [[ "$PKG_MGR" == "pacman" ]]; then
+    if have yay; then
+      log "Installing wluma from the AUR"
+      yay -S --needed --noconfirm wluma
+      return
+    fi
+
+    warn "yay is unavailable; building wluma from source instead"
+  fi
+
+  log "Installing wluma build dependencies via $PKG_MGR"
+  case "$PKG_MGR" in
+  apt | apt-get)
+    sudo_if_needed "$PKG_MGR" install -y \
+      v4l-utils libv4l-dev libudev-dev libvulkan-dev libdbus-1-dev
+    ;;
+  dnf)
+    sudo_if_needed dnf install -y \
+      v4l-utils libv4l-devel systemd-devel vulkan-loader-devel dbus-devel
+    ;;
+  zypper)
+    sudo_if_needed zypper install -y \
+      v4l-utils libv4l-devel systemd-devel vulkan-devel dbus-1-devel
+    ;;
+  pacman)
+    sudo_if_needed pacman -S --needed --noconfirm \
+      v4l-utils systemd vulkan-headers vulkan-icd-loader dbus pkgconf
+    ;;
+  esac
+
+  if [[ -d "$WLUMA_DIR" ]]; then
+    if [[ ! -f "$WLUMA_DIR/Cargo.toml" ]]; then
+      err "wluma directory exists but is not a Rust project: $WLUMA_DIR"
+      exit 1
+    fi
+  else
+    log "Downloading wluma $WLUMA_VERSION"
+    mkdir -p "$(dirname "$WLUMA_DIR")"
+    local archive tmpdir
+    tmpdir="$(mktemp -d)"
+    archive="$tmpdir/wluma.tar.gz"
+    curl -fsSL -o "$archive" \
+      "https://github.com/max-baz/wluma/archive/refs/tags/$WLUMA_VERSION.tar.gz"
+    tar -xzf "$archive" -C "$tmpdir"
+    mv "$tmpdir/wluma-$WLUMA_VERSION" "$WLUMA_DIR"
+    rm -rf "$tmpdir"
+  fi
+
+  log "Building wluma $WLUMA_VERSION"
+  WLUMA_VERSION="$WLUMA_VERSION" cargo build --release --locked --manifest-path "$WLUMA_DIR/Cargo.toml"
+  sudo_if_needed install -m 0755 "$WLUMA_DIR/target/release/wluma" /usr/local/bin/wluma
+}
+
 #######################################
 # macOS packages
 #######################################
@@ -730,6 +802,7 @@ EOF
 Skipped for the server profile:
   - FiraCode Nerd Font and fontconfig
   - Voxtype, its Whisper model, ALSA development headers, and wtype
+  - wluma
 EOF
   else
     cat <<'EOF'
@@ -739,6 +812,9 @@ Also installed:
 EOF
     if [[ "$OS" == "linux" ]]; then
       printf '%s\n' '  - Voxtype (Linux)'
+      if have wluma; then
+        printf '%s\n' '  - wluma (Linux)'
+      fi
       if have hypruler || [[ -x "$HOME/.cargo/bin/hypruler" ]]; then
         if [[ "$PKG_MGR" == "pacman" ]]; then
           printf '%s\n' '  - Hypruler (AUR)'
@@ -746,6 +822,8 @@ EOF
           printf '%s\n' '  - Hypruler (source)'
         fi
       fi
+    elif [[ -d "/Applications/Lumen.app" ]]; then
+      printf '%s\n' '  - Lumen (macOS)'
     fi
   fi
 
@@ -826,6 +904,9 @@ main() {
   install_oh_my_zsh
   install_nvm_node
   install_rust
+  if ! is_server; then
+    install_adaptive_brightness
+  fi
   if [[ "$OS" == "linux" ]] && ! is_server; then
     install_hypruler_linux
   fi

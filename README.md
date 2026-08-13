@@ -35,7 +35,7 @@ Two scripts handle everything on a fresh machine.
 bash dev-setup.sh
 ```
 
-The default personal profile installs the complete local development environment, including Voxtype, FiraCode Nerd Font, and Hypruler (Linux). It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
+The default personal profile installs the complete local development environment, including Voxtype, FiraCode Nerd Font, Hypruler, and wluma (Linux), or Lumen (macOS). It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
 
 For a Linux server accessed over SSH, use the server profile:
 
@@ -43,7 +43,7 @@ For a Linux server accessed over SSH, use the server profile:
 bash dev-setup.sh --server
 ```
 
-It retains the development and terminal tooling (including tmux/TPM, skills-cli, OpenCode, and Plannotator), Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips FiraCode Nerd Font and `fontconfig`, plus Voxtype, its Whisper model, its ALSA development dependency, `wtype`, and Hypruler. The `--server` profile is Linux-only; macOS continues to use the default profile.
+It retains the development and terminal tooling (including tmux/TPM, skills-cli, OpenCode, and Plannotator), Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips FiraCode Nerd Font and `fontconfig`, plus Voxtype, its Whisper model, its ALSA development dependency, `wtype`, Hypruler, and wluma. The `--server` profile is Linux-only; macOS continues to use the default profile.
 
 > **Note:** nvm and node will not be available until you start a new shell after the script finishes.
 
