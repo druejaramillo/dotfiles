@@ -17,7 +17,7 @@ For each family, create an isolated output folder with two self-contained,
 responsive one-page studies: one designed through Impeccable and one through
 Taste. Launch every individual study through a separate `general` subagent.
 Each subagent must own only its folder and receive the family tags, inspiration
-evidence, approved content boundary, image-asset requirements, and a request
+evidence, approved content boundary, image- or video-asset requirements, and a request
 to verify desktop and mobile behavior.
 
 Create or extend an exploration-only comparison host with a family switcher and

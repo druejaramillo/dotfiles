@@ -37,10 +37,12 @@ content boundary: do not invent vendors, metrics, endorsements, funding,
 events, or operational details.
 
 Load `design-inspo`, `impeccable`, `design-taste-frontend`, and `handoff` only
-when the command calls for them and they are available. If a required skill,
-CLI, image generator, or canonical artifact is unavailable, state that exact
-blocker instead of silently switching to a different workflow. Generate
-original local visual assets when the selected design skill requires them.
+when the command calls for them and they are available. `gpt_imagegen` is
+available for still-image generation and `grok_imagine` for video generation;
+select the medium that serves the design. If a required skill, CLI, image or
+video generator, or canonical artifact is unavailable, state that exact blocker
+instead of silently switching to a different workflow. Generate original local
+visual assets when the selected design skill requires them.
 
 For visual inspection of a local page or preview, use `web_screenshot` rather
 than composing Chromium or Playwright screenshot commands. Start with its

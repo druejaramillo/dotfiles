@@ -15,6 +15,6 @@ content.
 
 Before shipping, verify desktop and mobile presentation, accessibility,
 responsive navigation, reduced-motion behavior, source-truth compliance,
-generated or supplied assets, syntax, formatting, detector findings, and the
-project build. Ask for an explicit decision if a prototype-only control, such
-as a tweak lab, may ship on the public route.
+generated or supplied image and video assets, syntax, formatting, detector
+findings, and the project build. Ask for an explicit decision if a
+prototype-only control, such as a tweak lab, may ship on the public route.
