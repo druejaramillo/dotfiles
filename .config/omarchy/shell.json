@@ -44,7 +44,7 @@
           "deviceName": "Omarchy Spotify",
           "idleShutdownMinutes": 15,
           "showMiniPlayer": "On",
-          "shortcutPlayer": "Full player",
+          "shortcutPlayer": "Mini player",
           "shortcutHints": "On",
           "showTrackTitle": "On",
           "showArtistName": "Off",
@@ -93,6 +93,16 @@
     "lock": 300,
     "screensaver": 150
   },
-  "plugins": [],
-  "version": 1
+  "plugins": [
+    {
+      "id": "drue.lock"
+    }
+  ],
+  "version": 1,
+  "disabledPlugins": [
+    "omarchy.lock"
+  ],
+  "cloneSourceRestores": [
+    "drue.lock"
+  ]
 }

@@ -14,15 +14,11 @@ o.bind("SUPER + SHIFT + E", "Email", { launch = "mailspring --password-store=gno
 hl.unbind("SUPER + SHIFT + C")
 o.bind("SUPER + SHIFT + C", "Calendar", { launch = "rencal" })
 
--- Quattro uses these keys for bar panels; retain the former HyprMon profiles.
-for profile = 1, 4 do
-	hl.unbind("SUPER + CTRL + code:" .. (profile + 9))
-end
-o.bind("SUPER + CTRL + 0", "HyprMon profiles", "hyprmon profiles")
-o.bind("SUPER + CTRL + 1", "HyprMon laptop profile", "hyprmon --profile laptop")
-o.bind("SUPER + CTRL + 2", "HyprMon work profile", "hyprmon --profile work")
-o.bind("SUPER + CTRL + 3", "HyprMon home profile", "hyprmon --profile home")
-o.bind("SUPER + CTRL + 4", "HyprMon Denon profile", "hyprmon --profile denon")
+-- Keep HyprMon profiles on keys that do not replace Omarchy's bar-panel binds.
+o.bind("SUPER + SHIFT + CTRL + code:10", "HyprMon laptop profile", "hyprmon --profile laptop")
+o.bind("SUPER + SHIFT + CTRL + code:11", "HyprMon work profile", "hyprmon --profile work")
+o.bind("SUPER + SHIFT + CTRL + code:12", "HyprMon home profile", "hyprmon --profile home")
+o.bind("SUPER + SHIFT + CTRL + code:13", "HyprMon Denon profile", "hyprmon --profile denon")
 
 -- Preserve the former clamshell profile behavior instead of Quattro's default
 -- internal-display-only handling.
