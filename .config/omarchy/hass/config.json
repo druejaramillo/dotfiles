@@ -1,0 +1,31 @@
+{
+  "baseUrl": "http://100.95.207.59:8123",
+  "localUrl": "",
+  "trustedNetwork": "",
+  "demoMode": false,
+  "favorites": [
+    "light.living_room_lights",
+    "light.bedroom_lights",
+    "script.shower_time",
+    "script.set_joules_climate",
+    "light.cync_indoor_light_strip_16ft",
+    "switch.cync_indoor_plug"
+  ],
+  "demoFavorites": [
+    "light.living_room_lamp",
+    "fan.living_room_ceiling_fan",
+    "climate.living_room_thermostat",
+    "media_player.living_room_tv",
+    "scene.living_room_movie_night",
+    "light.kitchen_pendant",
+    "switch.kitchen_coffee_maker",
+    "sensor.kitchen_temperature",
+    "cover.garage_door",
+    "lock.garage_side_door"
+  ],
+  "groupByArea": true,
+  "showEntityIcons": true,
+  "selectedTab": "favorites",
+  "displayNameOverrides": {},
+  "iconOverrides": {}
+}
