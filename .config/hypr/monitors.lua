@@ -9,5 +9,4 @@ hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy
 
 -- Hyprland 0.56 requires an integral logical resolution. 3200 / 1.75 is not
 -- valid, so use the nearest equivalent 1920-wide logical desktop instead.
-hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 1.6666667 })
-hl.monitor({ output = "DP-6", mode = "preferred", position = "auto", scale = 1 })
+hl.monitor({ output = "eDP-1", mode = "preferred", position = "auto", scale = 2 })
