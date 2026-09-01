@@ -7,12 +7,10 @@
           "id": "omarchy.indicators"
         },
         {
-          "id": "omarchy.clock",
           "format": "dddd HH:mm",
           "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n—\nmm",
-          "birthYear": 2002,
-          "lifeExpectancy": 90
+          "id": "omarchy.clock",
+          "verticalFormat": "HH\n—\nmm"
         },
         {
           "id": "omarchy.keyboard-layout"
@@ -37,7 +35,31 @@
           "id": "omarchy.tray"
         },
         {
+          "id": "io.github.thisisgm.omapods"
+        },
+        {
+          "id": "quickshell.spotify",
+          "deviceName": "Omarchy Spotify",
+          "idleShutdownMinutes": 15,
+          "showMiniPlayer": "On",
+          "shortcutPlayer": "Full player",
+          "shortcutHints": "On",
+          "showTrackTitle": "On",
+          "showArtistName": "Off",
+          "showPausedTrack": "On",
+          "scrollBarText": "Off",
+          "scrollSpeed": "1",
+          "maxBarTextWidth": "240",
+          "audioQuality": "320 kbps"
+        },
+        {
+          "id": "hass"
+        },
+        {
           "id": "omarchy.tailscale"
+        },
+        {
+          "id": "jankeesvw.time-machine"
         },
         {
           "id": "omarchy.dropbox"
@@ -66,8 +88,8 @@
     "transparent": false
   },
   "idle": {
-    "lock": 600,
-    "screensaver": 300
+    "lock": 300,
+    "screensaver": 150
   },
   "plugins": [],
   "version": 1

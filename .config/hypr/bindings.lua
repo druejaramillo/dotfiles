@@ -5,7 +5,7 @@ o.bind("SUPER + RETURN", "Terminal", { launch = "ghostty +new-window" })
 
 hl.unbind("SUPER + ALT + RETURN")
 o.bind("SUPER + ALT + RETURN", "Tmux", {
-  launch = 'xdg-terminal-exec --dir="$HOME" zsh -c "tmux attach || tmux new -s Work"',
+	launch = 'xdg-terminal-exec --dir="$HOME" zsh -c "tmux attach || tmux new -s Work"',
 })
 
 hl.unbind("SUPER + SHIFT + E")
@@ -14,12 +14,9 @@ o.bind("SUPER + SHIFT + E", "Email", { launch = "mailspring --password-store=gno
 hl.unbind("SUPER + SHIFT + C")
 o.bind("SUPER + SHIFT + C", "Calendar", { launch = "rencal" })
 
-hl.unbind("SUPER + SHIFT + W")
-o.bind("SUPER + SHIFT + W", "Typora", { launch = "typora --enable-wayland-ime" })
-
 -- Quattro uses these keys for bar panels; retain the former HyprMon profiles.
 for profile = 1, 4 do
-  hl.unbind("SUPER + CTRL + code:" .. (profile + 9))
+	hl.unbind("SUPER + CTRL + code:" .. (profile + 9))
 end
 o.bind("SUPER + CTRL + 0", "HyprMon profiles", "hyprmon profiles")
 o.bind("SUPER + CTRL + 1", "HyprMon laptop profile", "hyprmon --profile laptop")
