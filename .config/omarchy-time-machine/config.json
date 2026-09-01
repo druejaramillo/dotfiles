@@ -1,0 +1,17 @@
+{
+  "source": "~",
+  "retention": {
+    "daily": 7,
+    "weekly": 4,
+    "monthly": 12,
+    "yearly": 3
+  },
+  "destinations": [
+    {
+      "name": "backup-ssd",
+      "display_name": "SanDisk SSD Backup",
+      "repository": "/run/media/drue/BACKUP/backup/restic",
+      "password_file": "/home/drue/.config/omarchy-time-machine/backup-ssd.key"
+    }
+  ]
+}
