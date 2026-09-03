@@ -31,3 +31,5 @@ o.bind("switch:on:Lid Switch", nil, "hyprmon --profile home", { locked = true })
 o.bind("switch:off:Lid Switch", nil, "hyprmon --profile laptop", { locked = true })
 
 o.bind("SUPER + M", "Hypruler", { launch = "hypruler" })
+
+o.bind("ALT + SPACE", "Play/pause media", "omarchy-shell media playPause", { locked = true })
