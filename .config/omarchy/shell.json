@@ -99,6 +99,10 @@
     }
   ],
   "version": 1,
-  "disabledPlugins": ["omarchy.lock"],
-  "cloneSourceRestores": ["drue.lock"]
+  "disabledPlugins": [
+    "omarchy.lock"
+  ],
+  "cloneSourceRestores": [
+    "drue.lock"
+  ]
 }

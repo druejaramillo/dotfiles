@@ -112,6 +112,9 @@ alias ssh-hetzner='ssh -i ~/.ssh/hetzner-puter root@100.123.104.114'
 # Kill excess Vite servers when vibe coding websites
 alias killvite='fuser -k {5173..5200}/tcp 2>/dev/null'
 
+# AirPlay using doubletake
+alias airplay='doubletake -video-codec h264 -hwaccel nvenc -fps 30'
+
 # Add Go bin directory to PATH
 export PATH="$PATH:/usr/local/go/bin"
 export PATH="$PATH:$(go env GOPATH)/bin"
