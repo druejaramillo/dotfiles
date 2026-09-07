@@ -1,0 +1,30 @@
+volume = 0
+
+volume_min = -50
+
+repeat = "off"
+
+shuffle = true
+
+mono = false
+
+initial_directory = "~/Music"
+
+seek_large_step_sec = 30
+
+eq_preset = "Flat"
+
+visualizer = "Bars"
+
+vis_volume_linked = true
+
+low_power = false
+
+theme = "tokyo-night"
+
+log_level = "info"
+
+provider = "spotify"
+
+[spotify]
+client_id = "ede0fe0f53564baf94662f2ad47663dc"
