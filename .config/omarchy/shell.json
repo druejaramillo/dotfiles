@@ -40,19 +40,7 @@
           "id": "io.github.thisisgm.omapods"
         },
         {
-          "id": "quickshell.spotify",
-          "deviceName": "Omarchy Spotify",
-          "idleShutdownMinutes": 15,
-          "showMiniPlayer": "On",
-          "shortcutPlayer": "Mini player",
-          "shortcutHints": "On",
-          "showTrackTitle": "Off",
-          "showArtistName": "Off",
-          "showPausedTrack": "Off",
-          "scrollBarText": "Off",
-          "scrollSpeed": "1",
-          "maxBarTextWidth": "240",
-          "audioQuality": "320 kbps"
+          "id": "org.ren.caldir"
         },
         {
           "id": "hass"
@@ -99,10 +87,6 @@
     }
   ],
   "version": 1,
-  "disabledPlugins": [
-    "omarchy.lock"
-  ],
-  "cloneSourceRestores": [
-    "drue.lock"
-  ]
+  "disabledPlugins": ["omarchy.lock"],
+  "cloneSourceRestores": ["drue.lock"]
 }
