@@ -79,7 +79,7 @@ return {
 				{
 					"<leader>cl",
 					function()
-						vim.cmd("LspInfo")
+						vim.cmd("checkhealth vim.lsp")
 					end,
 					desc = "Lsp Info",
 				},
