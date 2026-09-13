@@ -1,5 +1,5 @@
 hl.unbind("SUPER + RETURN")
-o.bind("SUPER + RETURN", "Terminal", { launch = "ghostty +new-window" })
+o.bind("SUPER + RETURN", "Terminal", { launch = "ghostty --gtk-single-instance=false" })
 
 hl.unbind("SUPER + ALT + RETURN")
 o.bind("SUPER + ALT + RETURN", "Tmux", {
