@@ -41,5 +41,5 @@
   clean = grep -v '^monitor='
   smudge = cat
 [filter "stripapikeys"]
-  clean = grep -v 'API_KEY'
+  clean = grep -vE 'API_KEY|APP_ID|APP_KEY'
   smudge = cat
