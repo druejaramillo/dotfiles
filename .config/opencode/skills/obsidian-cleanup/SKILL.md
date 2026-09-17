@@ -10,10 +10,13 @@ user has not specified a note, ask one short question for the note name or
 path before reading or editing anything. Do not clean an entire vault merely
 because it is available.
 
-The target is a concise, logically nested study outline. Treat the existing
-text as source material to restructure, not as prose to rewrite. Preserve its
-meaning, mathematical notation, examples, and scholarly citations unless a
-rule below says otherwise.
+The target is a logically nested study outline. Treat the existing text as
+source material to restructure, not as prose to rewrite. Preserve every source
+statement, qualification, definition, derivation step, example, data value,
+mathematical expression, and scholarly citation unless a rule below explicitly
+identifies it as a removable formatting artifact. Do not summarize, condense,
+generalize, replace examples, combine distinct claims, or otherwise omit or
+rewrite source content.
 
 ## Workflow
 
@@ -22,18 +25,34 @@ rule below says otherwise.
 2. Read each target note in full before editing. Identify its headings,
    logical structure, definitions, display math, tables, figures, citations,
    callouts, source labels, and broken transcription fragments.
-3. Make the smallest complete cleanup that applies every relevant rule below.
-   Edit only the requested notes.
-4. Review the edited Markdown for outline depth, table and math indentation,
+3. Divide the requested range into contiguous, independently editable sections
+   at existing conceptual headings. Do not split a list, table, display,
+   callout, figure, citation, or sentence across sections. If a range has no
+   usable headings, divide it only at complete logical boundaries.
+4. Dispatch one read-only subagent per section in parallel. Give each subagent
+   its complete source section and the minimal adjacent context needed to
+   preserve list depth and heading hierarchy. Require it to return the complete
+   edited Markdown replacement for that section only; it must not edit files,
+   summarize, omit, or rewrite source content.
+5. Collect every section replacement, verify that the boundaries join into one
+   valid outline, and reconcile only boundary formatting. The primary agent
+   writes the combined result with exactly one `apply_patch` invocation per
+   target note. Do not apply section-by-section edits or let subagents write to
+   the note.
+6. Review the edited Markdown for outline depth, table and math indentation,
    dangling prose, accidental content loss, and formatting that no longer
    renders as Markdown.
-5. State which notes were cleaned and any content that required a judgment
+7. State which notes were cleaned and any content that required a judgment
    call. Do not claim that a note was fully cleaned if only part of it was
    requested or completed.
 
 When a request specifies a range, clean only that range unless it would leave
 an adjacent broken list, table, display, or sentence. In that case, make the
 minimal adjacent change needed to preserve valid structure.
+
+For a one-section request, use one read-only subagent rather than inventing
+artificial section boundaries. For a multi-section request, dispatch all
+section subagents before collecting any result.
 
 ## Outline Structure
 
@@ -47,10 +66,11 @@ minimal adjacent change needed to preserve valid structure.
 - Use child bullets for support, qualifications, derivation steps, examples,
   and consequences. Nest again only when the child itself has supporting
   detail.
-- Give every complete sentence or separate logical claim its own bullet.
+- Give every complete sentence or separate logical claim its own bullet without
+  shortening or combining its source content.
 - Rejoin extraction fragments that belong to one sentence or one idea before
-  placing them in the outline. Do not create artificial bullets from source
-  line wraps.
+  placing them in the outline. Preserve every word and mathematical token when
+  rejoining them; do not create artificial bullets from source line wraps.
 - Do not leave ordinary prose as a root-level paragraph, an unindented
   continuation, or a dangling sentence between bullets.
 - Do not add blank lines between ordinary adjacent bullets. Keep one blank
@@ -67,7 +87,7 @@ the events are mutually independent.
 After
 
 - The sample space has eight points
-	- Each point has probability $1/8$
+	- Each point has probability $\frac{1}{8}$
 	- Therefore, the events are mutually independent
 ```
 
@@ -111,9 +131,10 @@ sentence.
   axioms, cases, methods, or summary points.
 - Convert lettered source lists such as `a.`, `b.`, and `c.` to numeric lists.
   Update every related reference from `(a)` to `(1)`, and so on.
-- Replace source equation-number references with a meaningful reference to the
-  equation's role or origin. Never leave a reference such as `(1.3.1)` or
-  `Equation (2.1.2)` merely because it appeared in the source.
+- Remove source equation-number references only when they are navigation
+  artifacts. Preserve the surrounding statement without adding a paraphrase or
+  new explanation. If removing the reference would make the statement
+  ambiguous, preserve it and flag it to the user rather than guessing.
 
 ```md
 Before
@@ -132,12 +153,12 @@ After
 - Bayes' Theorem
 	1. First condition
 	2. Second condition
-- From the definition of conditional probability, we obtain the result
+- We obtain the result
 ```
 
-Use semantic references that make sense in context, for example: `from the
-definition of conditional probability`, `using the third axiom`, `from the
-preceding result`, or `from the last lemma`.
+Do not invent semantic references to replace removed navigation markers. Delete
+only the removable reference fragment; if that would make the sentence
+ambiguous, preserve it and flag it to the user.
 
 ## Definitions, Prose, And Notation
 
@@ -150,9 +171,9 @@ preceding result`, or `from the last lemma`.
   of `$P` versus `$\mathbb{P}$`, `$\cap$` versus juxtaposition, variable names,
   and notation conventions unless the source itself is internally inconsistent
   or clearly malformed.
-- Correct obvious OCR and transcription errors only when the intended meaning
-  is clear. If the intended content is uncertain, preserve it and flag it to
-  the user instead of inventing a correction.
+- Do not correct OCR or transcription text as part of cleanup. Preserve it and
+  flag it to the user when it appears uncertain. Repair only malformed Markdown
+  syntax when the repair does not alter the source content.
 
 ```md
 Before
@@ -250,12 +271,12 @@ After
   because it is source-derived.
 - Remove figures and their image Markdown, including remote Mathpix images.
 - Remove a figure caption if it only names the figure. If a caption contains a
-  substantive observation, convert that observation to a regular bullet and
-  retain any scholarly citation it contains.
+  substantive observation, convert that observation to a regular bullet with
+  all of its source wording and retain any scholarly citation it contains.
 - Remove native Obsidian callouts, such as `> [!note]`, `> [!warning]`, or
-  similar callout blocks. Convert important content in a callout into regular
-  bullets at the appropriate logical depth; discard decorative or redundant
-  callout text.
+  similar callout blocks. Convert their content into regular bullets at the
+  appropriate logical depth without dropping claims, qualifications, or
+  citations; discard only the callout container and decorative marker.
 - Do not introduce new callouts, blockquotes, or figure captions.
 - If an imported blockquote contains a substantive aside or quotation that
   must remain, rewrite it as a regular bullet. Preserve any citation within
@@ -280,10 +301,12 @@ After
 - Remove QED markers, including `$\square$`, `\blacksquare`, and standalone
   filled-square characters.
 - Remove source-only equation numbering, chapter-section references, and
-  exercise references when they are used only as navigation markers. Rewrite
-  an explanatory reference semantically if it contributes to the content.
-- Remove source-only figure references after removing the associated figure.
-  Reword the sentence so it stands on its own.
+  exercise references only when they are navigation markers. Preserve the rest
+  of the sentence exactly; if it cannot stand without the reference, flag it
+  rather than rewriting its content.
+- Remove source-only figure references after removing the associated figure
+  while preserving the rest of the sentence exactly. Flag a sentence that
+  cannot stand without the reference rather than rewording it.
 - Do not remove a named theorem, author attribution, historical note, or
   scholarly citation merely because it originated in the source.
 
@@ -295,15 +318,18 @@ Before
 
 After
 
-- By the geometric-series formula, we obtain the result
+- The geometric series gives the result
 ```
 
 ## Final Review Checklist
 
 Before finishing, verify that the requested note has:
 
+- all source statements, qualifications, examples, derivation steps, data,
+  mathematical content, and scholarly citations retained except explicitly
+  removable formatting artifacts
 - no remaining source-only heading or theorem/example/definition serials
-- no remaining source equation-number references or lettered sublists
+- no remaining removable source equation-number references or lettered sublists
 - no prose-ending periods on outline bullets
 - first-definition terms bolded without excess bolding
 - displays attached to and indented beneath their parent bullets
@@ -316,3 +342,9 @@ Before finishing, verify that the requested note has:
 
 If a cleanup rule and factual accuracy conflict, preserve factual accuracy and
 tell the user what needs a decision.
+
+## Requested Work
+
+The user request is inserted here after the complete skill instructions:
+
+$ARGUMENTS
