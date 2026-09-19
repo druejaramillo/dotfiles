@@ -43,8 +43,4 @@ async-backend = epoll
 # Use Zsh as default shell
 command = /bin/zsh -l -i
 
-# Always show title bar
-gtk-titlebar = true
-window-decoration = client
-
 theme = Carbonfox
