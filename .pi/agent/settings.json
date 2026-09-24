@@ -19,6 +19,9 @@
     "mermaid": "streaming"
   },
   "showCacheMissNotices": false,
+  "pi-image-gen": {
+    "defaultModel": "gpt-image-2.5-flare"
+  },
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
@@ -32,7 +35,7 @@
     "xai/grok-4.7": "high"
   },
   "tuiMode": "fullscreen",
-  "fullscreenExitOutput": "transcript",
+  "fullscreenExitOutput": "resume-hint",
   "fullscreenScrollbar": "auto",
   "enabledModels": [
     "openai/gpt-6-astra",
