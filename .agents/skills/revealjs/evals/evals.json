@@ -1,0 +1,17 @@
+{
+  "skill_name": "revealjs",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a six-slide reveal.js presentation about reducing incident response time, then check it for overflow.",
+      "expected_output": "Should explain a content-informed visual approach before generation, use the scaffold script relative to the installed skill directory, and invoke the overflow checker with the same resolved skill path. It should not assume that the current presentation directory contains the checker script.",
+      "assertions": [
+        "States a content-informed visual approach",
+        "Uses create-presentation.js relative to the skill directory",
+        "Uses check-overflow.js relative to the skill directory",
+        "Does not use a presentation-directory-relative checker path"
+      ],
+      "files": []
+    }
+  ]
+}
