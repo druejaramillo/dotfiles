@@ -1,0 +1,12 @@
+{
+  "lastChangelogVersion": "0.85.1",
+  "theme": "carbonfox",
+  "packages": [
+    "npm:@plannotator/pi-extension",
+    "npm:@nicknisi/pi-cloak",
+    "npm:@gotgenes/pi-permission-system",
+    "npm:pi-toggle-skills",
+    "npm:pi-web-access",
+    "npm:pi-knowledge"
+  ]
+}

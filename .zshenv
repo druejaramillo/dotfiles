@@ -1,2 +1,2 @@
-export OPENCODE_ENABLE_PARALLEL=1
 export GOEXPERIMENT=simd
+export PI_KNOWLEDGE_EMBEDDING=openai:text-embedding-3-small

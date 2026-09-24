@@ -13,8 +13,8 @@
       "location": "/home/drue/Projects/skills",
       "remote": false
     },
-    "taste": {
-      "location": "https://github.com/Leonxlnx/taste-skill.git",
+    "plannotator": {
+      "location": "https://github.com/backnotprop/plannotator",
       "remote": true
     }
   },

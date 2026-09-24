@@ -58,8 +58,8 @@ export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 # Add Mason bin folder to PATH
 export PATH="$PATH:$HOME/.local/share/nvim/mason/bin"
 
-# OpenCode alias command
-function oc() {
+# Pi alias command
+function p() {
   if [[ -n "${TMUX:-}" ]]; then
     local env_commands
 
@@ -75,7 +75,7 @@ function oc() {
     fi
   fi
 
-  command opencode "$@"
+  command pi "$@"
 }
 
 # Docker alias commands

@@ -1,0 +1,13 @@
+{
+  "name": "pi-extensions",
+  "private": true,
+  "dependencies": {
+    "@gotgenes/pi-permission-system": "^33.1.1",
+    "@nicknisi/pi-cloak": "^0.1.2",
+    "@plannotator/pi-extension": "^0.27.19",
+    "node-gyp": "^13.0.2",
+    "pi-knowledge": "^0.11.0",
+    "pi-toggle-skills": "^0.1.18",
+    "pi-web-access": "^0.31.0"
+  }
+}
