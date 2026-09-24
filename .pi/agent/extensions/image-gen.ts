@@ -1,6 +1,6 @@
 import { mkdir, open, readFile, realpath, lstat, unlink } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
@@ -33,18 +33,50 @@ const GOOGLE_MODELS: Record<string, string> = {
   "gemini-3.1-flash-lite-image": "gemini-3.1-flash-lite-image",
   "gemini-3-pro-image": "gemini-3-pro-image",
 };
+const CODEX_ENDPOINT = "https://chatgpt.com/backend-api/codex";
+const CODEX_AUTH_CLAIM = "https://api.openai.com/auth";
 const ENDPOINTS: Record<Provider, string> = {
   openai: "https://api.openai.com/v1",
   google: "https://generativelanguage.googleapis.com/v1beta",
   openrouter: "https://openrouter.ai/api/v1",
 };
 const CREDENTIAL_HINTS: Record<Provider, string> = {
-  openai: "Run /login openai or set OPENAI_API_KEY. An openai-codex subscription token does not authenticate the OpenAI Images API.",
+  openai: "Run /login openai-codex for subscription OAuth or /login openai (or set OPENAI_API_KEY) for an API key.",
   google: "Run /login google or set GEMINI_API_KEY.",
   openrouter: "Run /login openrouter or set OPENROUTER_API_KEY.",
 };
 
 class ImageGenError extends Error {}
+class ImageGenHttpError extends ImageGenError {
+  readonly status: number;
+  constructor(message: string, status: number) { super(message); this.status = status; }
+}
+type CodexAuth = { token: string; accountId: string };
+
+/** Ask Pi to refresh/resolve the saved OAuth login; never read auth.json or reuse a Codex token on api.openai.com. */
+async function resolveCodexAuth(ctx: ExtensionContext): Promise<CodexAuth | undefined> {
+  try {
+    const model = ctx.modelRegistry.getAll().find((candidate) =>
+      candidate.provider === "openai-codex" && ctx.modelRegistry.isUsingOAuth(candidate)
+    );
+    if (!model) return undefined;
+    const resolved = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+    if (!resolved.ok || !resolved.apiKey) return undefined;
+    const accountHeader = Object.entries(resolved.headers ?? {}).find(([name]) => name.toLowerCase() === "chatgpt-account-id")?.[1];
+    let accountId = typeof accountHeader === "string" ? accountHeader : undefined;
+    if (!accountId) {
+      const encoded = resolved.apiKey.split(".")[1];
+      if (!encoded) return undefined;
+      const claims = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+      accountId = claims?.[CODEX_AUTH_CLAIM]?.chatgpt_account_id;
+    }
+    if (typeof accountId !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(accountId)) return undefined;
+    return { token: resolved.apiKey, accountId };
+  } catch {
+    // Missing/expired/malformed OAuth should not prevent use of a configured API key.
+    return undefined;
+  }
+}
 
 function agentDir(): string {
   return process.env.PI_CODING_AGENT_DIR || join(homedir(), ".pi", "agent");
@@ -183,7 +215,7 @@ async function readBounded(response: Response, limit = MAX_RESPONSE_BYTES): Prom
   return Buffer.concat(chunks, length).toString("utf8");
 }
 
-async function requestJson(url: string, init: RequestInit, provider: Provider): Promise<Record<string, unknown>> {
+async function requestJson(url: string, init: RequestInit, provider: Provider | "Codex OAuth"): Promise<Record<string, unknown>> {
   let response: Response;
   try {
     response = await fetch(url, init);
@@ -194,11 +226,11 @@ async function requestJson(url: string, init: RequestInit, provider: Provider): 
   if (!response.ok) {
     // Provider bodies can contain signed URLs, prompt text or credentials: never echo them.
     void response.body?.cancel().catch(() => {});
-    const hint = response.status === 401 || response.status === 403 ? " Check the provider's API key and image API access."
+    const hint = response.status === 401 || response.status === 403 ? " Check the selected credentials and image API access."
       : response.status === 429 ? " Rate limit or quota exceeded."
       : response.status === 400 ? " Check the model, prompt and image options."
       : " Check your provider account and try again.";
-    throw new ImageGenError(`${provider} image API returned HTTP ${response.status}.${hint}`);
+    throw new ImageGenHttpError(`${provider} image API returned HTTP ${response.status}.${hint}`, response.status);
   }
   try {
     const parsed: unknown = JSON.parse(await readBounded(response));
@@ -245,57 +277,109 @@ function extractImages(json: Record<string, unknown>, provider: Provider): Input
   return images;
 }
 
+async function requestCodexImage(params: ImageParams, model: string, inputs: InputImage[], auth: CodexAuth, signal: AbortSignal): Promise<Record<string, unknown>> {
+  const operation = inputs.length ? "edits" : "generations";
+  const body: Record<string, unknown> = {
+    model, prompt: params.prompt, background: "auto", size: params.size ?? "auto", quality: params.quality ?? "auto",
+    ...(params.n && params.n > 1 ? { n: params.n } : {}),
+  };
+  if (inputs.length) body.images = inputs.map(({ bytes, mime }) => ({ image_url: `data:${mime};base64,${bytes.toString("base64")}` }));
+  return requestJson(`${CODEX_ENDPOINT}/images/${operation}`, {
+    method: "POST", signal, redirect: "error",
+    headers: {
+      authorization: `Bearer ${auth.token}`,
+      "chatgpt-account-id": auth.accountId,
+      originator: "pi",
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  }, "Codex OAuth");
+}
+
 async function generate(params: ImageParams, ctx: ExtensionContext, toolSignal?: AbortSignal) {
   const settings = await loadSettings();
   const selected = resolveImageModel(settings.defaultModel);
   validateParams(params, selected);
-  const key = await ctx.modelRegistry.getApiKeyForProvider(selected.provider);
-  if (!key) throw new ImageGenError(`${selected.provider} is not configured with an API key in Pi. ${CREDENTIAL_HINTS[selected.provider]}`);
-  const inputs = await loadInputs(params.image, ctx.cwd);
   const { provider, model } = selected;
+  const oauth = provider === "openai" ? await resolveCodexAuth(ctx) : undefined;
+  let key: string | undefined;
+  if (!oauth) key = await ctx.modelRegistry.getApiKeyForProvider(provider);
+  if (!oauth && !key) throw new ImageGenError(`${provider} has no usable credentials in Pi. ${CREDENTIAL_HINTS[provider]}`);
+  const inputs = await loadInputs(params.image, ctx.cwd);
   const turnSignal = toolSignal ?? ctx.signal;
   const signal = turnSignal ? AbortSignal.any([turnSignal, AbortSignal.timeout(300_000)]) : AbortSignal.timeout(300_000);
-  let url: string;
-  let init: RequestInit;
-  if (provider === "google") {
-    url = `${ENDPOINTS.google}/models/${encodeURIComponent(model)}:generateContent`;
-    const imageConfig: Record<string, string> = {};
-    if (params.aspectRatio) imageConfig.aspectRatio = params.aspectRatio;
-    if (params.imageSize) imageConfig.imageSize = params.imageSize;
-    const parts = inputs.map(({ bytes, mime }) => ({ inline_data: { mime_type: mime, data: bytes.toString("base64") } }));
-    init = {
-      method: "POST", signal,
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [...parts, { text: params.prompt }] }],
-        generationConfig: { responseModalities: ["IMAGE"], candidateCount: params.n ?? 1, ...(Object.keys(imageConfig).length ? { imageConfig } : {}) },
-      }),
-    };
-  } else if (provider === "openai" && inputs.length) {
-    url = `${ENDPOINTS.openai}/images/edits`;
-    const form = new FormData();
-    form.append("model", model);
-    form.append("prompt", params.prompt);
-    form.append("n", String(params.n ?? 1));
-    if (params.size) form.append("size", params.size);
-    if (params.quality) form.append("quality", params.quality);
-    for (const [index, input] of inputs.entries()) {
-      form.append(inputs.length > 1 ? "image[]" : "image", new Blob([new Uint8Array(input.bytes)], { type: input.mime }), `reference-${index}.${input.mime.split("/")[1]}`);
+  let json: Record<string, unknown> | undefined;
+  let authMethod: "codex_oauth" | "api_key" = "api_key";
+  let codexIssue: string | undefined;
+  if (oauth) {
+    if ((params.n ?? 1) > 4 || inputs.length > 5) {
+      codexIssue = "Codex OAuth supports up to 4 outputs and 5 reference images per request";
+    } else {
+      try {
+        json = await requestCodexImage(params, model, inputs, oauth, signal);
+        authMethod = "codex_oauth";
+      } catch (error) {
+        // Only an auth rejection is safe to retry on a different, metered account.
+        // A timeout, quota error, or unknown response may have produced a billable image.
+        if (!(error instanceof ImageGenHttpError) || ![401, 403].includes(error.status)) throw error;
+        codexIssue = `Codex OAuth was rejected (HTTP ${error.status})`;
+      }
     }
-    init = { method: "POST", signal, headers: { authorization: `Bearer ${key}` }, body: form };
-  } else {
-    url = `${ENDPOINTS[provider]}/images${provider === "openai" ? "/generations" : ""}`;
-    const body: Record<string, unknown> = { model, prompt: params.prompt, n: params.n ?? 1 };
-    if (params.size) body.size = params.size;
-    if (params.quality) body.quality = params.quality;
-    if (provider === "openrouter") {
-      if (params.aspectRatio) body.aspect_ratio = params.aspectRatio;
-      if (params.imageSize) body.resolution = params.imageSize === "512px" ? "512" : params.imageSize;
-      if (inputs.length) body.input_references = inputs.map(({ bytes, mime }) => ({ type: "image_url", image_url: { url: `data:${mime};base64,${bytes.toString("base64")}` } }));
-    }
-    init = { method: "POST", signal, headers: { authorization: `Bearer ${key}`, "content-type": "application/json" }, body: JSON.stringify(body) };
   }
-  const images = extractImages(await requestJson(url, init, provider), provider);
+  if (!json) {
+    key ??= await ctx.modelRegistry.getApiKeyForProvider(provider);
+    if (!key) throw new ImageGenError(`${codexIssue ? `${codexIssue}; ` : ""}no ${provider} API key fallback is configured. ${CREDENTIAL_HINTS[provider]}`);
+    let url: string;
+    let init: RequestInit;
+    if (provider === "google") {
+      url = `${ENDPOINTS.google}/models/${encodeURIComponent(model)}:generateContent`;
+      const imageConfig: Record<string, string> = {};
+      if (params.aspectRatio) imageConfig.aspectRatio = params.aspectRatio;
+      if (params.imageSize) imageConfig.imageSize = params.imageSize;
+      const parts = inputs.map(({ bytes, mime }) => ({ inline_data: { mime_type: mime, data: bytes.toString("base64") } }));
+      init = {
+        method: "POST", signal,
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [...parts, { text: params.prompt }] }],
+          generationConfig: { responseModalities: ["IMAGE"], candidateCount: params.n ?? 1, ...(Object.keys(imageConfig).length ? { imageConfig } : {}) },
+        }),
+      };
+    } else if (provider === "openai" && inputs.length) {
+      url = `${ENDPOINTS.openai}/images/edits`;
+      const form = new FormData();
+      form.append("model", model);
+      form.append("prompt", params.prompt);
+      form.append("n", String(params.n ?? 1));
+      if (params.size) form.append("size", params.size);
+      if (params.quality) form.append("quality", params.quality);
+      for (const [index, input] of inputs.entries()) {
+        form.append(inputs.length > 1 ? "image[]" : "image", new Blob([new Uint8Array(input.bytes)], { type: input.mime }), `reference-${index}.${input.mime.split("/")[1]}`);
+      }
+      init = { method: "POST", signal, headers: { authorization: `Bearer ${key}` }, body: form };
+    } else {
+      url = `${ENDPOINTS[provider]}/images${provider === "openai" ? "/generations" : ""}`;
+      const body: Record<string, unknown> = { model, prompt: params.prompt, n: params.n ?? 1 };
+      if (params.size) body.size = params.size;
+      if (params.quality) body.quality = params.quality;
+      if (provider === "openrouter") {
+        if (params.aspectRatio) body.aspect_ratio = params.aspectRatio;
+        if (params.imageSize) body.resolution = params.imageSize === "512px" ? "512" : params.imageSize;
+        if (inputs.length) body.input_references = inputs.map(({ bytes, mime }) => ({ type: "image_url", image_url: { url: `data:${mime};base64,${bytes.toString("base64")}` } }));
+      }
+      init = { method: "POST", signal, headers: { authorization: `Bearer ${key}`, "content-type": "application/json" }, body: JSON.stringify(body) };
+    }
+    try {
+      json = await requestJson(url, init, provider);
+    } catch (error) {
+      if (codexIssue && error instanceof ImageGenHttpError && [401, 403].includes(error.status)) {
+        throw new ImageGenError(`${codexIssue}; the OpenAI API key fallback was also rejected (HTTP ${error.status}). ${CREDENTIAL_HINTS.openai}`);
+      }
+      throw error;
+    }
+  }
+  const images = extractImages(json, provider);
   if (signal.aborted) throw new ImageGenError("Image generation was cancelled or timed out.");
   const dir = resolve(ctx.cwd, settings.outputDir ?? ".pi/images");
   try { await mkdir(dir, { recursive: true }); }
@@ -326,14 +410,14 @@ async function generate(params: ImageParams, ctx: ExtensionContext, toolSignal?:
     await Promise.all(paths.map((path) => unlink(path).catch(() => {})));
     throw error;
   }
-  return { provider, model, paths };
+  return { provider, model, authMethod, paths, images };
 }
 
 export default function imageGenExtension(pi: ExtensionAPI) {
   pi.registerTool({
     name: "image_generate",
     label: "Generate Image",
-    description: "Generate or edit raster images with the model selected by pi-image-gen.defaultModel in global settings. Saves files under .pi/images (or the configured outputDir). Include the returned markdown image links in your answer to display them.",
+    description: "Generate or edit raster images with the model selected by pi-image-gen.defaultModel in global settings. Saves files under .pi/images (or the configured outputDir) and attaches image previews to the tool result. Give the user the saved paths; local Markdown links may not render in every client.",
     parameters: Type.Object({
       prompt: Type.String({ description: "Describe the image; for edits say what to change and preserve." }),
       image: Type.Optional(Type.Array(Type.String(), { description: "Local reference image path(s) inside the working directory. Supports PNG, JPEG, WebP, GIF. For edits, pass the previous output file." })),
@@ -348,8 +432,15 @@ export default function imageGenExtension(pi: ExtensionAPI) {
       try {
         const result = await generate(params, ctx, signal);
         return {
-          content: [{ type: "text" as const, text: `Generated ${result.paths.length} image(s) with ${result.provider}/${result.model}. Show these inline in your answer:\n${result.paths.map((p) => `![${basename(p).replace(/\]/g, "\\]")}](${p.replace(/[\s#%()?<>]/g, (ch) => encodeURIComponent(ch))})`).join("\n")}` }],
-          details: { provider: result.provider, model: result.model, paths: result.paths },
+          content: [
+            { type: "text" as const, text: `Generated ${result.paths.length} image(s) with ${result.provider}/${result.model} (${result.authMethod === "codex_oauth" ? "Codex OAuth" : "API key"}). Saved files:\n${result.paths.join("\n")}\nImage preview(s) are attached to this tool result; tell the user where to find the saved files.` },
+            // Local Markdown paths are not inline images in every Pi client. Send actual
+            // image blocks for previews, capped to avoid flooding the model context.
+            ...result.images.slice(0, 4).map(({ bytes, mime }) => ({
+              type: "image" as const, data: bytes.toString("base64"), mimeType: mime,
+            })),
+          ],
+          details: { provider: result.provider, model: result.model, authMethod: result.authMethod, paths: result.paths },
         };
       } catch (error) {
         if (error instanceof ImageGenError) throw error;
@@ -358,12 +449,15 @@ export default function imageGenExtension(pi: ExtensionAPI) {
     },
   });
   pi.registerCommand("image-gen", {
-    description: "Show the selected image model and whether Pi has its provider API key",
+    description: "Show the selected image model and Pi credential preference (Codex OAuth, then API key)",
     handler: async (_args, ctx) => {
       try {
         const selected = resolveImageModel((await loadSettings()).defaultModel);
-        const ready = Boolean(await ctx.modelRegistry.getApiKeyForProvider(selected.provider));
-        if (ctx.hasUI) ctx.ui.notify(`${selected.provider}/${selected.model}: ${ready ? "API key configured" : `API key missing. ${CREDENTIAL_HINTS[selected.provider]}`}`, ready ? "info" : "warning");
+        const oauth = selected.provider === "openai" ? await resolveCodexAuth(ctx) : undefined;
+        const key = await ctx.modelRegistry.getApiKeyForProvider(selected.provider);
+        const ready = Boolean(oauth || key);
+        const method = oauth ? `Codex OAuth preferred; API key fallback ${key ? "configured" : "missing"}` : key ? "API key configured" : `No usable credentials. ${CREDENTIAL_HINTS[selected.provider]}`;
+        if (ctx.hasUI) ctx.ui.notify(`${selected.provider}/${selected.model}: ${method}`, ready ? "info" : "warning");
       } catch (error) {
         if (ctx.hasUI) ctx.ui.notify(error instanceof ImageGenError ? error.message : "Could not inspect image-generation settings.", "error");
       }
