@@ -58,25 +58,12 @@ export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 # Add Mason bin folder to PATH
 export PATH="$PATH:$HOME/.local/share/nvim/mason/bin"
 
-# Pi alias command
-function p() {
-  if [[ -n "${TMUX:-}" ]]; then
-    local env_commands
-
-    env_commands="$(
-      {
-        command tmux show-environment -s PLANNOTATOR_REMOTE 2>/dev/null
-        command tmux show-environment -s PLANNOTATOR_PORT 2>/dev/null
-      }
-    )"
-
-    if [[ -n "${env_commands}" ]]; then
-      eval "$env_commands"
-    fi
-  fi
-
-  command pi "$@"
-}
+# Herdr alias commands
+alias h='herdr'
+alias hml='herdr machine list'
+alias hwl='herdr workspace list'
+alias hwn='herdr workspace create --focus'
+alias hsl='herdr session list'
 
 # Docker alias commands
 alias d='docker'
@@ -90,18 +77,7 @@ alias tmd='tmux detach'
 alias tmn='tmux new'
 alias tmk='tmux kill-session'
 alias tmlk='tmux list-keys'
-
-function tma() {
-  if [[ -n "${SSH_CONNECTION:-}" || -n "${SSH_TTY:-}" ]]; then
-    export PLANNOTATOR_REMOTE=1
-    export PLANNOTATOR_PORT='19432-19463'
-  else
-    export PLANNOTATOR_REMOTE=0
-    unset PLANNOTATOR_PORT
-  fi
-
-  command tmux attach "$@"
-}
+alias tma='tmux attach'
 
 # SSH into my local web server
 alias ssh-puter='ssh -i ~/.ssh/id_ed25519 drue@100.95.207.59'
