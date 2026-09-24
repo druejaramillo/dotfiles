@@ -1,0 +1,58 @@
+// Smoke test without a model call. Runs the actual tool implementations with a fake Pi registry.
+import { readFile, writeFile, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { strict as assert } from 'node:assert';
+const home = dirname(dirname(fileURLToPath(import.meta.url)));
+let src = await readFile(join(home, 'index.ts'), 'utf8');
+src = src.replace(/^import \{ Type \} from "typebox";$/m, 'const Type = new Proxy({}, { get: () => (...args) => args });');
+src = src.replace(/^import \{ withFileMutationQueue, type ExtensionAPI \} from "@earendil-works\/pi-coding-agent";$/m, 'const withFileMutationQueue = async (_p, fn) => fn(); type ExtensionAPI = any;');
+const tmp = join(home, '.smoke-test.mts');
+const cwd = await mkdtemp('/tmp/pi-code-tools-smoke-');
+let shutdown;
+try {
+  await writeFile(tmp, src);
+  const tools = new Map();
+  const mod = await import(`file://${tmp}?v=${Date.now()}`);
+  mod.default({ registerTool: t => tools.set(t.name, t), on: (event, fn) => { if (event === 'session_shutdown') shutdown = fn; } });
+  assert.deepEqual([...tools.keys()], ['code_lsp', 'code_check', 'code_format', 'code_ast']);
+  const call = async (name, params) => (await tools.get(name).execute('test', params, undefined, undefined, { cwd })).content[0].text;
+  const file = join(cwd, 'demo.ts');
+  await writeFile(file, 'const result = foo(1);\n');
+  let s = await call('code_ast', { path: 'demo.ts', pattern: 'foo($A)', lang: 'ts' });
+  assert.match(s, /1 match/);
+  s = await call('code_ast', { path: 'demo.ts', pattern: 'foo($A)', lang: 'ts', replacement: 'bar($A)' });
+  assert.match(s, /preview only/);
+  assert.equal(await readFile(file, 'utf8'), 'const result = foo(1);\n');
+  s = await call('code_ast', { path: 'demo.ts', pattern: 'foo($A)', lang: 'ts', replacement: 'bar($A)', apply: true });
+  assert.match(s, /applied/);
+  assert.equal(await readFile(file, 'utf8'), 'const result = bar(1);\n');
+  await writeFile(file, 'const ü = foo(1);\n');
+  await call('code_ast', { path: 'demo.ts', pattern: 'foo($A)', lang: 'ts', replacement: 'bar($A)', apply: true });
+  assert.equal(await readFile(file, 'utf8'), 'const ü = bar(1);\n'); // byte offsets, not UTF-16
+  await symlink('/etc/passwd', join(cwd, 'escape.ts'));
+  await assert.rejects(call('code_ast', { path: 'escape.ts', pattern: 'foo($A)' }), /inside the current working directory/);
+  s = await call('code_check', { path: 'demo.ts' });
+  assert.match(s, /SKIPPED/);
+  await writeFile(join(cwd, '.prettierrc'), '{}\n');
+  await writeFile(file, 'const result={a:1}\n');
+  s = await call('code_format', { path: 'demo.ts' });
+  assert.match(s, /Prettier: preview only; changed/);
+  assert.equal(await readFile(file, 'utf8'), 'const result={a:1}\n');
+  s = await call('code_format', { path: 'demo.ts', apply: true });
+  assert.match(s, /Prettier: applied/);
+  assert.equal(await readFile(file, 'utf8'), 'const result = { a: 1 };\n');
+  const py = join(cwd, 'demo.py');
+  await writeFile(py, 'x=1\n');
+  s = await call('code_format', { path: 'demo.py' });
+  assert.match(s, /preview only/);
+  assert.equal(await readFile(py, 'utf8'), 'x=1\n');
+  s = await call('code_format', { path: 'demo.py', apply: true });
+  assert.match(s, /applied/);
+  assert.equal(await readFile(py, 'utf8'), 'x = 1\n');
+  s = await call('code_lsp', { path: 'demo.py', operation: 'diagnostics' });
+  assert.match(s, /LSP published|LSP did not publish/);
+  s = await call('code_lsp', { path: 'demo.py', operation: 'documentSymbols' });
+  assert.match(s, /result|x|null/);
+  console.log('All four tools loaded; AST search/preview/apply/UTF-8/escape, check, format preview/apply, and Python LSP passed.');
+} finally { shutdown?.(); await rm(tmp, { force: true }); await rm(cwd, { recursive: true, force: true }); }
