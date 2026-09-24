@@ -22,6 +22,9 @@
   "pi-image-gen": {
     "defaultModel": "gpt-image-2.5-flare"
   },
+  "pi-video-gen": {
+    "defaultModel": "xai/grok-imagine-video-1.5"
+  },
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
@@ -32,15 +35,18 @@
     "openai/gpt-6-astra": "max",
     "openai/gpt-6-sol": "xhigh",
     "openai/gpt-6-luna": "high",
-    "xai/grok-4.7": "high"
+    "xai/grok-4.7": "high",
+    "openai-codex/gpt-6-astra": "max",
+    "openai-codex/gpt-6-sol": "xhigh",
+    "openai-codex/gpt-6-luna": "high"
   },
   "tuiMode": "fullscreen",
   "fullscreenExitOutput": "resume-hint",
   "fullscreenScrollbar": "auto",
   "enabledModels": [
-    "openai/gpt-6-astra",
-    "openai/gpt-6-sol",
-    "openai/gpt-6-luna",
+    "openai-codex/gpt-6-astra",
+    "openai-codex/gpt-6-sol",
+    "openai-codex/gpt-6-luna",
     "xai/grok-4.7"
   ]
 }
