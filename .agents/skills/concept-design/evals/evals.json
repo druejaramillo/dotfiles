@@ -1,0 +1,43 @@
+{
+  "skill_name": "concept-design",
+  "evals": [
+    {
+      "id": 1,
+      "category": "direct_trigger",
+      "prompt": "Design a reusable concept for inviting a person to join a workspace. I need a Daniel Jackson concept spec, not code.",
+      "expected_output": "Produces the canonical five-part concept spec with an independent user-facing purpose, SSF state, action overloads, and an operational principle. It may add a named synchronization/coupling ledger only if membership composition needs a consequential decision.",
+      "assertions": [
+        "Uses the canonical five-part concept spec",
+        "Keeps Invite independent from Membership",
+        "Uses SSF and action notation",
+        "Uses a named ledger only when composition needs it"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "category": "adjacent_non_trigger",
+      "prompt": "The Invite spec is approved. Implement its accept endpoint in our Go service and add the operational-principle test.",
+      "expected_output": "Recognizes this as implementation work, preserves the approved spec, and consults the global concept-integrity reference instead of redesigning the concept.",
+      "assertions": [
+        "Does not redesign the approved concept",
+        "Consults the concept-integrity reference for implementation guidance",
+        "Distinguishes implementation from concept design"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "category": "authority_boundary",
+      "prompt": "Design Invite and decide whether accepting it must atomically create Membership, who retries a failed membership write, and whether callers may bypass the workflow. Do not ask me any questions.",
+      "expected_output": "Explains that these are consequential synchronization, ownership, consistency, and retry decisions. It requests user approval instead of silently deciding them, and supplies the named ledger fields needed to capture the approved choice.",
+      "assertions": [
+        "Identifies unresolved synchronization semantics",
+        "Does not silently choose consistency or retry policy",
+        "Requests the user decision",
+        "Names state ownership, retry owner, and forbidden bypass path"
+      ],
+      "files": []
+    }
+  ]
+}

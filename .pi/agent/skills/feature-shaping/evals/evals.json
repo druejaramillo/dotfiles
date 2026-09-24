@@ -1,0 +1,26 @@
+{
+  "skill_name": "feature-shaping",
+  "evals": [
+    {
+      "id": 1,
+      "category": "direct_trigger",
+      "prompt": "We approved a frame for helping small gym owners recover failed member payments. Shape a four-week solution and write the pitch.",
+      "expected_output": "Produces a pitch with problem, appetite, rough solution, rabbit holes, and no-gos. Examines risky payment and data-flow assumptions, preserves design latitude, and reports the human build decision rather than pretending to make it.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "category": "concept_boundary",
+      "prompt": "Shape Invite acceptance for a workspace. An Invite concept spec exists, but no one has decided whether Membership creation is atomic or who retries a failed write.",
+      "expected_output": "Uses the existing Invite spec, identifies the consequential synchronization and consistency questions as unresolved, does not silently decide them, and does not mark the pitch Shape Go while an unbounded risk remains.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "category": "builder_autonomy",
+      "prompt": "Shape a two-week read-only calendar view. Write every API function, component prop, ticket, and pixel measurement so the team just implements it.",
+      "expected_output": "Shapes the essential use case and feasibility within the appetite, but leaves routine implementation and visual detail to the team and avoids a preassigned task plan.",
+      "files": []
+    }
+  ]
+}

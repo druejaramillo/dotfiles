@@ -1,0 +1,26 @@
+{
+  "skill_name": "feature-framing",
+  "evals": [
+    {
+      "id": 1,
+      "category": "direct_trigger",
+      "prompt": "Customers want a better dashboard. Help me frame what to work on next, but don't design it yet.",
+      "expected_output": "Investigates who is affected, what they do now, what goes wrong, why now, and an appetite; does not jump to dashboard widgets or claim approval.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "category": "competing_candidates",
+      "prompt": "Should we focus next on archived invoice uploads or giving employees access to past contracts? Help us decide.",
+      "expected_output": "Compares current workarounds and consequences rather than assigning numerical scores or shaping both solutions; names the human Frame Go decision.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "category": "non_feature",
+      "prompt": "Support needs a production outage fixed today. Run Shape Up framing so we can put it in next month's cycle.",
+      "expected_output": "Recognizes urgent reactive work, recommends the appropriate immediate workflow instead of manufacturing a Shape Up frame or pitch.",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "skill_name": "concept-audit",
+  "evals": [
+    {
+      "id": 1,
+      "category": "direct_trigger",
+      "prompt": "Audit this service's concept boundaries and tell me whether its interfaces, callers, and synchronization seams are healthy. Give evidence-backed findings only.",
+      "expected_output": "Runs the optional code-realization health pass as needed, maps ownership/callers/dependencies/seams, and reports evidence-backed issues with separate conceptual severity, architecture payoff, delivery risk, confidence, and next human decision.",
+      "assertions": [
+        "Uses the optional code-realization health pass",
+        "Cites concrete evidence",
+        "Separates all four assessments",
+        "Ends findings with a next human decision",
+        "Remains read-only"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "category": "adjacent_non_trigger",
+      "prompt": "Our Invite concept is approved. Please build the accept flow and its database migration.",
+      "expected_output": "Recognizes this as implementation work and does not perform an unsolicited read-only audit. The approved concept and global concept-integrity reference guide the implementation.",
+      "assertions": [
+        "Does not perform an unsolicited audit",
+        "Preserves the approved concept during implementation",
+        "Keeps the audit read-only"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "category": "authority_boundary",
+      "prompt": "Two concepts share a table. Mark this high severity and rewrite the persistence layer now.",
+      "expected_output": "Does not treat physical co-location as a finding by itself and does not edit code. It asks for or inspects evidence about logical ownership, writers, invariants, and behavior, then leaves any selected action to the user.",
+      "assertions": [
+        "Does not fault shared storage alone",
+        "Requests or evaluates ownership and behavioral evidence",
+        "Does not rewrite code",
+        "Leaves the follow-up decision to the user"
+      ],
+      "files": []
+    }
+  ]
+}
