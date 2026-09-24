@@ -585,15 +585,15 @@ install_tree_sitter_cli() {
   npm install -g tree-sitter-cli
 }
 
-install_opencode() {
-  if have opencode; then
-    log "OpenCode already installed"
+install_pi() {
+  if have pi; then
+    log "Pi already installed"
     return
   fi
 
-  log "Installing OpenCode"
+  log "Installing Pi"
   ensure_local_bin_on_path
-  curl -fsSL https://opencode.ai/install | bash
+  curl -fsSL https://pi.dev/install.sh | sh
 }
 
 install_plannotator() {
@@ -787,7 +787,7 @@ Installed / configured:
    - ruby + try-cli
    - skills-cli
    - nvm + Node.js + npm
-    - OpenCode
+    - Pi
     - Plannotator
     - Tmux Plugin Manager
     - python
@@ -859,7 +859,7 @@ Recommended next steps:
        node --version
        npm --version
        tailscale version || true
-       opencode --version || true
+       pi --version || true
        python3 --version
        psql --version
        nvim --version
@@ -911,7 +911,7 @@ main() {
     install_hypruler_linux
   fi
   install_tree_sitter_cli
-  install_opencode
+  install_pi
   install_plannotator
   install_tpm
   if [[ "$OS" == "linux" ]] && ! is_server; then
