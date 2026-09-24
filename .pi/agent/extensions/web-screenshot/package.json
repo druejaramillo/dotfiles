@@ -1,0 +1,14 @@
+{
+  "name": "pi-web-screenshot",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.62.0",
+    "typebox": "1.3.34"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.87.1",
+    "@types/node": "^24.13.6",
+    "typescript": "^7.0.2"
+  }
+}
