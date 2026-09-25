@@ -2,8 +2,7 @@
 name: design-lab
 description:
   Run an explicitly requested phase of the visual design workflow, from catalog
-  discovery through studies, hero exploration, documentation, and production
-  promotion.
+  discovery through studies, hero exploration, and production promotion.
 disable-model-invocation: true
 ---
 
