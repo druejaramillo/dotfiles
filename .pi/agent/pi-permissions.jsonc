@@ -1,0 +1,35 @@
+{
+  "defaultPolicy": {
+    "tools": "ask",
+    "bash": "ask",
+    "mcp": "ask",
+    "skills": "ask",
+    "special": "ask"
+  },
+  "tools": {
+    "*": "ask"
+    "bash": "ask",
+    "read": "allow",
+    "grep": "allow",
+    "find": "allow",
+    "ls": "allow",
+    "write": "ask",
+    "mcp": "ask",
+    "third_party_tool": "ask",
+    "context7_*": "ask"
+  },
+  "bash": {
+    "git *": "ask",
+    "git status": "allow",
+    "git diff": "allow",
+    "git log *": "allow",
+    "rg *": "allow"
+  },
+  "skills": {
+    "*": "allow",
+  },
+  "special": {
+    "doom_loop": "deny",
+    "external_directory": "ask"
+  }
+}
