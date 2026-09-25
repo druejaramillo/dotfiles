@@ -332,5 +332,6 @@
 
     // Preserve normal shell job-control behavior
     "terminal_suspend": "ctrl+z"
-  }
+  },
+  "plugin": ["./herdr-tui-session.js"]
 }
