@@ -37,9 +37,6 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "37signals.basecamp"
-        },
-        {
           "id": "io.github.thisisgm.omapods"
         },
         {
@@ -90,10 +87,6 @@
     }
   ],
   "version": 1,
-  "disabledPlugins": [
-    "omarchy.lock"
-  ],
-  "cloneSourceRestores": [
-    "drue.lock"
-  ]
+  "disabledPlugins": ["omarchy.lock"],
+  "cloneSourceRestores": ["drue.lock"]
 }
