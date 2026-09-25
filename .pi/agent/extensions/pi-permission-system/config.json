@@ -1,35 +1,38 @@
 {
-  "defaultPolicy": {
-    "tools": "ask",
-    "bash": "ask",
-    "mcp": "ask",
-    "skills": "ask",
-    "special": "ask"
-  },
-  "tools": {
+  "permission": {
     "*": "ask",
-    "bash": "ask",
+    "path": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
     "read": "allow",
     "grep": "allow",
     "find": "allow",
     "ls": "allow",
     "write": "ask",
-    "mcp": "ask",
-    "third_party_tool": "ask",
-    "context7_*": "ask"
-  },
-  "bash": {
-    "git *": "ask",
-    "git status": "allow",
-    "git diff": "allow",
-    "git log *": "allow",
-    "rg *": "allow"
-  },
-  "skills": {
-    "*": "allow"
-  },
-  "special": {
-    "doom_loop": "deny",
-    "external_directory": "ask"
+    "edit": "ask",
+    "bash": {
+      "*": "ask",
+      "git *": "ask",
+      "git status": "allow",
+      "git diff": "allow",
+      "git log *": "allow",
+      "rg *": "allow",
+      "npm *": "allow"
+    },
+    "skill": {
+      "*": "allow"
+    },
+    "third_party_tool": {
+      "*": "ask"
+    },
+    "external_directory": {
+      "*": "ask"
+    },
+    "external_directory_read": {
+      "*": "allow"
+    }
   }
 }
