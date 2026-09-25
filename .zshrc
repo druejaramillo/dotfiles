@@ -91,6 +91,9 @@ alias killvite='fuser -k {5173..5200}/tcp 2>/dev/null'
 # AirPlay using doubletake
 alias airplay='doubletake -video-codec h264 -hwaccel nvenc -fps 30'
 
+# sentry
+fpath=("/home/drue/.local/share/zsh/site-functions" $fpath)
+
 # Add Go bin directory to PATH
 export PATH="$PATH:/usr/local/go/bin"
 export PATH="$PATH:$(go env GOPATH)/bin"
@@ -100,14 +103,6 @@ export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
 
 # Add ffprobe to path
 PATH="/usr/local/bin/ffprobe:$PATH"
-export PATH
-
-# Add PDF Notes package to Python path
-PYTHONPATH="/Users/user/Documents/Coding/Python:$PYTHONPATH"
-export PYTHONPATH
-
-# Setting PATH for Python 3.11
-PATH="/Library/Frameworks/Python.framework/Versions/3.11/bin:${PATH}"
 export PATH
 
 export PATH="$HOME/.local/bin:$PATH"
