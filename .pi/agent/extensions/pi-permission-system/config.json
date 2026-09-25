@@ -7,7 +7,7 @@
     "special": "ask"
   },
   "tools": {
-    "*": "ask"
+    "*": "ask",
     "bash": "ask",
     "read": "allow",
     "grep": "allow",
@@ -26,7 +26,7 @@
     "rg *": "allow"
   },
   "skills": {
-    "*": "allow",
+    "*": "allow"
   },
   "special": {
     "doom_loop": "deny",
