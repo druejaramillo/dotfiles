@@ -1,4 +1,5 @@
 {
+  "doublePressToConfirm": false,
   "permission": {
     "*": "ask",
     "path": {
@@ -15,21 +16,65 @@
     "edit": "ask",
     "bash": {
       "*": "ask",
-      "git *": "ask",
-      "git status": "allow",
-      "git diff": "allow",
+      "git status *": "allow",
+      "git diff *": "allow",
       "git log *": "allow",
+      "pwd": "allow",
+      "cd *": "allow",
+      "command -v *": "allow",
       "rg *": "allow",
-      "npm *": "allow"
+      "ls *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "wc *": "allow",
+      "stat *": "allow",
+      "du *": "allow",
+      "df *": "allow",
+      "diff *": "allow",
+      "cmp *": "allow",
+      "sha256sum *": "allow",
+      "date *": "allow",
+      "which *": "allow",
+      "sort *": "allow",
+      "echo *": "allow",
+      "printf *": "allow",
+      "if *": "allow",
+      "for *": "allow",
+      "sleep *": "allow",
+      "wait *": "allow",
+      "find *": "allow",
+      "find -delete *": "ask",
+      "npm *": "allow",
+      "node *": "allow",
+      "python *": "allow",
+      "go *": "allow",
+      "npx *": "allow",
+      "curl *": "allow",
+      "ffmpeg *": "allow",
+      "basecamp *": "allow",
+      "herdr *": "allow",
+      "mkdir *": "allow",
+      "cp *": "allow",
+      "mv *": "allow"
     },
     "skill": {
       "*": "allow"
     },
-    "third_party_tool": {
-      "*": "ask"
-    },
+    "web_enable": "allow",
+    "web_search": "allow",
+    "get_search_content": "allow",
+    "fetch_content": "allow",
+    "knowledge_search": "allow",
+    "code_lsp": "allow",
+    "code_check": "allow",
+    "code_format": "allow",
+    "code_ast": "allow",
+    "web_screenshot": "allow",
+    "image_generate": "allow",
+    "video_generate": "allow",
     "external_directory": {
-      "*": "ask"
+      "*": "ask",
+      "/tmp/*": "allow"
     },
     "external_directory_read": {
       "*": "allow"
