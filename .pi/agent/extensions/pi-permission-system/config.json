@@ -23,6 +23,7 @@
       "cd *": "allow",
       "command -v *": "allow",
       "rg *": "allow",
+      "grep *": "allow",
       "ls *": "allow",
       "head *": "allow",
       "tail *": "allow",
