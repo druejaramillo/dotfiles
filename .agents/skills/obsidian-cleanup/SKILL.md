@@ -29,19 +29,17 @@ rewrite source content.
    at existing conceptual headings. Do not split a list, table, display,
    callout, figure, citation, or sentence across sections. If a range has no
    usable headings, divide it only at complete logical boundaries.
-4. Dispatch one read-only subagent per section in parallel. Give each subagent
-   its complete source section and the minimal adjacent context needed to
-   preserve list depth and heading hierarchy. Require it to return the complete
-   edited Markdown replacement for that section only; it must not edit files,
-   summarize, omit, or rewrite source content.
-5. Collect every section replacement, verify that the boundaries join into one
-   valid outline, and reconcile only boundary formatting. The primary agent
-   writes the combined result with exactly one `apply_patch` invocation per
-   target note. Do not apply section-by-section edits or let subagents write to
-   the note.
-6. Review the edited Markdown for outline depth, table and math indentation,
-   dangling prose, accidental content loss, and formatting that no longer
-   renders as Markdown.
+4. Clean the requested content and write the result to the target note. Use the
+   available file-editing tools to make and save the changes; this skill
+   authorizes modifying the explicitly named note. Do not treat the task as
+   read-only or stop after producing replacement text in chat.
+5. For long notes, you may delegate section cleanup and collect complete
+   Markdown replacements, but keep file writes coordinated in the primary
+   agent to avoid overwriting one another. Delegation is optional; it must not
+   block or replace writing the finished result to the note.
+6. Re-read or otherwise verify the saved note. Review the edited Markdown for
+   outline depth, table and math indentation, dangling prose, accidental
+   content loss, and formatting that no longer renders as Markdown.
 7. State which notes were cleaned and any content that required a judgment
    call. Do not claim that a note was fully cleaned if only part of it was
    requested or completed.
@@ -49,10 +47,6 @@ rewrite source content.
 When a request specifies a range, clean only that range unless it would leave
 an adjacent broken list, table, display, or sentence. In that case, make the
 minimal adjacent change needed to preserve valid structure.
-
-For a one-section request, use one read-only subagent rather than inventing
-artificial section boundaries. For a multi-section request, dispatch all
-section subagents before collecting any result.
 
 ## Outline Structure
 

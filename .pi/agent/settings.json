@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "0.99.1",
   "theme": "carbonfox",
   "packages": [
     "npm:@plannotator/pi-extension",
@@ -38,15 +38,17 @@
     "xai/grok-4.7": "high",
     "openai-codex/gpt-6-astra": "max",
     "openai-codex/gpt-6-sol": "xhigh",
-    "openai-codex/gpt-6-luna": "high"
+    "openai-codex/gpt-6-luna": "high",
+    "openai-codex/gpt-6.1-sol": "max",
+    "anthropic/claude-opus-5-5": "xhigh"
   },
   "tuiMode": "fullscreen",
   "fullscreenExitOutput": "resume-hint",
   "fullscreenScrollbar": "auto",
   "enabledModels": [
-    "openai-codex/gpt-6-astra",
-    "openai-codex/gpt-6-sol",
+    "openai-codex/gpt-6.1-sol",
     "openai-codex/gpt-6-luna",
-    "xai/grok-4.7"
+    "xai/grok-4.7",
+    "anthropic/claude-opus-5-5"
   ]
 }
