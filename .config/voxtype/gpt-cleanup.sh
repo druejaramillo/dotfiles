@@ -3,15 +3,14 @@
 
 set -euo pipefail
 
-if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-  printf '%s\n' 'OPENAI_API_KEY is not set.' >&2
-  exit 1
-fi
+# Load OpenAI API key from local .env file
+[ -f .env ] && set -a && source .env && set +a
 
 input=$(cat)
-model="${OPENAI_MODEL:-gpt-5.6-luna}"
+model="${OPENAI_MODEL:-gpt-6-luna}"
 
-instructions=$(cat <<'PROMPT'
+instructions=$(
+  cat <<'PROMPT'
 Clean and improve this transcript:
 
 Fix spelling, capitalization, and punctuation errors.
@@ -37,6 +36,7 @@ If the transcript ends with a formatting command, reformat the entire output acc
 "format:sms" -> rewrite as a short, casual text message.
 "format:post" -> rewrite as a social media post (concise, engaging).
 "format:meeting-notes" -> rewrite as structured meeting notes with key points and action items.
+Watch for commands that may not be transcribed in the exact format above (e.g. "Format email" -> format:email, "Format colon summary" -> format:summary, "Format: SMS" -> format:sms). If you see a transcription ending with something very similar to a command, treat it as a command.
 If no command is detected, return the cleaned transcript as plain text.
 Preserve the original meaning and intent. You may reorder words within a sentence for clarity, but do not add, remove, or alter any information.
 
