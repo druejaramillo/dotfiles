@@ -3,10 +3,19 @@
 
 set -euo pipefail
 
+input=$(cat)
+
+# Standalone Pi slash commands must not acquire ASR punctuation or LLM prose.
+# Handle them before credential loading so they work without an API request.
+pi_command_pattern='^[[:space:]]*(/(skill:)?[[:alnum:]_-]+)[.!?,;:]*[[:space:]]*$'
+if [[ $input =~ $pi_command_pattern ]]; then
+  printf '%s\n' "${BASH_REMATCH[1]}"
+  exit 0
+fi
+
 # Load OpenAI API key from local .env file
 [ -f .env ] && set -a && source .env && set +a
 
-input=$(cat)
 model="${OPENAI_MODEL:-gpt-6-luna}"
 
 instructions=$(
@@ -27,6 +36,7 @@ Add commas (,) to separate clauses, lists, or natural pauses within a sentence.
 Add question marks (?) when the sentence is a question, even if not phrased as one explicitly.
 Add exclamation marks (!) when the tone is clearly emphatic or excited.
 Structure the text into paragraphs: start a new paragraph when the speaker shifts topic, changes idea, or after a significant pause in speech.
+Pi slash commands (for example /skill:obsidian-cleanup, /design-catalog, /plannotator-review) are literal control tokens, not prose. Preserve their leading slash, colon, spelling, and hyphens exactly. Do not wrap them in quotes or backticks, or add sentence punctuation to them. If the transcript starts with a Pi slash command, keep it at the very beginning of the output and clean only the arguments that follow. Remove ASR sentence punctuation attached immediately after a leading command (for example "/review, check the changes" -> "/review check the changes").
 If the transcript ends with a formatting command, reformat the entire output accordingly. Supported commands:
 "format:email" -> rewrite as a professional email (subject line, greeting, body, sign-off).
 "format:email-casual" -> rewrite as a friendly, informal email.
