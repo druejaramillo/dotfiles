@@ -1,0 +1,27 @@
+id = "local.plannotator-herdr"
+name = "Plannotator Browser Relay"
+version = "0.1.0"
+min_herdr_version = "0.9.1"
+description = "Open Pi Plannotator reviews in local browser tabs; saved SSH machines use terminal-browser --ssh"
+platforms = ["linux", "macos"]
+
+[[startup]]
+command = ["node", "plannotator-relay.ts", "start"]
+
+[[actions]]
+id = "start"
+title = "Start Plannotator browser relay"
+contexts = ["global"]
+command = ["node", "plannotator-relay.ts", "start"]
+
+[[actions]]
+id = "status"
+title = "Plannotator browser relay status"
+contexts = ["global"]
+command = ["node", "plannotator-relay.ts", "status"]
+
+[[panes]]
+id = "browser"
+title = "Plannotator"
+placement = "tab"
+command = ["node", "plannotator-browser-tab.ts"]
