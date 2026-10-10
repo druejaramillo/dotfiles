@@ -15,6 +15,9 @@ o.bind("SUPER + SHIFT + E", "Email", { launch = "mailspring --password-store=gno
 hl.unbind("SUPER + SHIFT + C")
 o.bind("SUPER + SHIFT + C", "Calendar", { launch = "rencal" })
 
+hl.unbind("SUPER + SHIFT + M")
+o.bind("SUPER + SHIFT + M", "Music", { launch = "spotifast" })
+
 o.bind("SUPER + SHIFT + CTRL + code:10", "HyprMon laptop profile", "hyprmon --profile laptop")
 o.bind("SUPER + SHIFT + CTRL + code:11", "HyprMon work profile", "hyprmon --profile work")
 o.bind("SUPER + SHIFT + CTRL + code:12", "HyprMon home profile", "hyprmon --profile home")

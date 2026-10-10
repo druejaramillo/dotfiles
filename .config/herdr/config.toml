@@ -77,6 +77,7 @@ status_indicators = "symbols"
 resume_agents_on_restore = true
 
 [experimental]
+kitty_graphics = true
 pane_history = false
 
 [ui.sound]
