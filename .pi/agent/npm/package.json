@@ -2,7 +2,7 @@
   "name": "pi-extensions",
   "private": true,
   "dependencies": {
-    "@gotgenes/pi-permission-system": "^40.1.2",
+    "@gotgenes/pi-permission-system": "^40.1.3",
     "@nicknisi/pi-cloak": "^0.1.2",
     "@plannotator/pi-extension": "^0.28.9",
     "node-gyp": "^13.0.2",
