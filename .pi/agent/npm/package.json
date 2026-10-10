@@ -2,12 +2,12 @@
   "name": "pi-extensions",
   "private": true,
   "dependencies": {
-    "@gotgenes/pi-permission-system": "^36.0.0",
+    "@gotgenes/pi-permission-system": "^40.1.2",
     "@nicknisi/pi-cloak": "^0.1.2",
-    "@plannotator/pi-extension": "^0.27.22",
+    "@plannotator/pi-extension": "^0.28.9",
     "node-gyp": "^13.0.2",
     "pi-knowledge": "^0.11.0",
-    "pi-toggle-skills": "^0.1.19",
-    "pi-web-access": "^0.33.0"
+    "pi-toggle-skills": "^0.1.21",
+    "pi-web-access": "^0.38.0"
   }
 }
