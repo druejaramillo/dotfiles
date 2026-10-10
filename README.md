@@ -43,7 +43,7 @@ For a Linux server accessed over SSH, use the server profile:
 bash dev-setup.sh --server
 ```
 
-It retains the development and terminal tooling (including tmux/TPM, skills-cli, OpenCode, and Plannotator), Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips FiraCode Nerd Font and `fontconfig`, plus Voxtype, its Whisper model, its ALSA development dependency, `wtype`, Hypruler, and wluma. The `--server` profile is Linux-only; macOS continues to use the default profile.
+It retains the development and terminal tooling (including tmux/TPM, skills-cli, and Plannotator), Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips FiraCode Nerd Font and `fontconfig`, plus Voxtype, its Whisper model, its audio/input dependencies (`libasound2-dev`/ALSA development headers and `wtype`), Hypruler, and adaptive brightness (`wluma`). The `--server` profile is Linux-only; macOS continues to use the default profile.
 
 > **Note:** nvm and node will not be available until you start a new shell after the script finishes.
 
@@ -64,6 +64,8 @@ Options:
 | `--name` | _(required)_ | Git `user.name` |
 | `--email` | _(required)_ | Git `user.email` |
 | `--passphrase VALUE` | none | Passphrase for the GPG key |
+| `--key-type TYPE` | `RSA` | GPG key and subkey type |
+| `--key-length BITS` | `4096` | GPG key and subkey length |
 | `--expire VALUE` | `0` (never) | GPG key expiry, e.g. `1y`, `2y` |
 | `--force` | off | Delete and regenerate the GPG key if one already exists |
 | `--github-host HOST` | `github.com` | For GitHub Enterprise |
@@ -184,7 +186,6 @@ dotfiles push
 | skills-cli | Agent skills CLI | Both |
 | luarocks | Lua package manager | Both |
 | Python 3 | Scripting | Both |
-| OpenCode | AI coding agent | Both |
 | Plannotator | AI plan review | Both |
 | Dotfiles bare checkout | Config files into `$HOME` | Both |
 | Default shell → zsh | Login shell | Both |
@@ -192,6 +193,7 @@ dotfiles push
 | Voxtype + Whisper model | Local voice dictation | Personal Linux |
 | ALSA dev headers + wtype | Voxtype audio/input deps | Personal Linux |
 | Hypruler | Hyprland window rules helper | Personal Linux |
+| wluma (Linux) / Lumen (macOS) | Adaptive brightness | Personal |
 
 ---
 
