@@ -8,9 +8,12 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 ## Steps
 
-1. Call the Skill tool with `writing-for-agents` for the writing style guide.
+1. Read [Writing for agents](../writing-for-agents/SKILL.md) for the style guide.
+   Explicit file reads work in Pi; do not require an unavailable Skill tool.
 
-2. Read the primary sources for the session the user specifies. This may mean searching through session logs on this machine. If the user doesn't specify a session, default to the current one.
+2. Read the primary sources for the specified session, or the current session
+   when none is specified. Use only relevant authorized session logs, not a
+   cross-project sweep of unrelated private conversations.
 
 3. Look for candidates for improvement in these categories.
 
@@ -22,7 +25,16 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 - **No-ops**: look for instructions in steering files that don't modify the agent's behavior. _Use when_ the steering files are large and unwieldy.
 - **Information access**: look for opportunities to increase the agent's access to information. Teeing dev server logs, readonly access to third-party services. _Use when_ a crucial piece of information was not available to the agent.
 
-4. Present these candidates to the user, in order of severity.
+4. For a recurring correction or repeated instruction, read
+   [Encode lessons in structure](../../references/principles/encode-lessons-in-structure.md).
+   Name the failure class and strongest fitting existing or proposed mechanism.
+   For a separately approved new guard, keep a historical negative example that
+   demonstrates it catches the old failure rather than merely adding advice.
+
+5. Present candidates in severity order, distinguishing one-offs, proposed
+   structural improvements, and unresolved follow-ups. This retrospective
+   recommends changes; apply environment/skill/CI edits or external tracker
+   writes only when their implementation is explicitly authorized.
 
 ## Reference
 

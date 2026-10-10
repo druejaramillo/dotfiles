@@ -18,6 +18,13 @@ If an experiment exists, ask whether to resume or start a *distinct* fresh exper
 
 ## Approved foreground loop
 
+After plan approval, read `~/.agents/references/principles/explain-the-number.md`
+before trusting, comparing, or reporting the measurements. Check that trials did
+the intended work without hidden errors/skips, preserve comparable conditions,
+and retain run count and variability within the approved budget. For performance
+numbers, identify the observed limiter from runtime evidence. Keep the existing
+run ledger below; do not add another benchmark skill or experiment log.
+
 Save an initial baseline and an append-only `experiments/<slug>/runs.jsonl` with timestamp, configuration, command, raw artifact path, metric, error/seed, and keep/revert decision for *every* trial. Work within the approved files/environment. Each iteration proposes one testable change, runs the same benchmark, compares it to the baseline and prior trials, logs failures as well as wins, then keeps or safely reverts only its own change. Stop at the iteration cap, budget, interruption, or user request. Do not treat one favorable seed as proof; show all configurations tried and variability when available.
 
 Write `experiments/<slug>/report.md` with the baseline, full trial table, best reproducible result, failures, raw artifact links, and limitations. Never say a benchmark was run unless raw output was saved. The default Pi agent owns the loop; a Herdr helper is optional for independent review, not for simultaneous edits to benchmark files.

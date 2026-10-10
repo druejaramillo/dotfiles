@@ -1,22 +1,58 @@
 # Skill mechanics
 
-The skill-specific branch of [`writing-for-agents`](SKILL.md): what changes when the document is a skill (frontmatter, the invocation choice, and router skills). Everything else about writing it is the universal reference in `SKILL.md`.
+The skill-specific branch of [Writing for agents](SKILL.md): frontmatter,
+invocation, composition, and router skills. The universal document-writing
+method remains in `SKILL.md`.
 
 ## Invocation
 
-Two choices, trading the two loads:
+Separate automatic discovery from the ability to read instructions. In Pi:
 
-- A **model-invoked** skill keeps a `description`, so the agent can fire it autonomously, and other skills can reach it. You can still type its name: model-invocation always _includes_ user reach; a description only ever adds agent discovery, never removes the human's. The description is the skill's top-level context pointer, forced to stay loaded at all times: permanent context load in exchange for discoverability. A model-invoked skill whose content is all reference is also one home for shared reference: another skill can invoke it, so reference needed by several skills lives in one place. Mechanics: omit `disable-model-invocation`, and write a model-facing description carrying the trigger branches (the pointer-writing rules in `SKILL.md` apply in full).
-- A **user-invoked** skill strips the description from the agent's reach: only the human typing its name can invoke it, and no other skill can. Zero context load, but it spends cognitive load: you are the index that must remember it exists. Mechanics: set `disable-model-invocation: true`; the `description` becomes human-facing: a one-line summary, trigger lists stripped.
+- A **model-invoked** skill has a name/description advertised in the model's
+  context. It can be selected when the task matches, and the human can still use
+  `/skill:<name>`. Omit `disable-model-invocation` or set it to `false`.
+- A **manual-only** skill sets `disable-model-invocation: true`. It is hidden from
+  automatic model selection but remains available through `/skill:<name>`. Keep
+  a valid description; for a by-hand workflow, make it a concise human-facing
+  summary rather than an always-loaded trigger catalogue.
 
-Pick model-invocation only when the agent must reach the skill on its own, or another skill must. If it only ever fires by hand, make it user-invoked and pay no context load.
+**Manual-only is not a file-access boundary.** Another skill or prompt template
+can explicitly instruct the agent to read a known `SKILL.md` path. That loads the
+instructions without globally advertising the leaf or requiring an unavailable
+Skill tool. The leaf's scope and approval requirements still apply.
 
-Shared reference that two user-invoked skills both need can live in neither: with no descriptions, neither can fire the other. Push it to a plain file outside the skill system: external reference any skill can point at.
+Other harnesses may expose different command/discovery behavior. Check their
+supported mechanics rather than assuming a visibility flag prohibits file reads.
 
-## Splitting by invocation
+## Choose the reach that is needed
 
-The invocation cut of splitting (the sequence cut lives in `SKILL.md`): split off a model-invoked skill when you have a distinct leading word that should trigger it on its own (a trigger word you actually use in your prompts), or another skill must reach it. You pay context load for the new always-loaded description, so that independent reach has to be worth it.
+Advertise a skill when its independent automatic trigger earns permanent context
+load. Keep it manual-only when explicit invocation or a precise parent pointer
+provides sufficient reach. A skill needed by a router does not need to become
+model-invoked solely for that composition.
+
+Match the directory and `name`, keep a non-empty description, and use only fields
+the target harness supports. Preserve existing visibility when changing a body.
+
+## Composition and shared reference
+
+A pointer names the exact file and the condition for reading it. Resolve relative
+paths from the containing skill directory, not the project working directory.
+Use absolute/home-relative paths for external locations when that is clearer.
+
+A shared workflow can live in one existing skill reached by explicit path. Pure
+reference can instead live in a plain shared file outside the skill namespace,
+with no frontmatter or `SKILL.md`. Use the latter when guidance should be usable
+independently without another skill command. Keep one authoritative copy rather
+than duplicating bodies to work around manual-only visibility.
 
 ## Router skills
 
-When user-invoked skills multiply past what you can remember, that piled-up cognitive load is cured by a **router skill**: one user-invoked skill that names the others and when to reach for each, so the human has one skill to remember instead of many. It can only hint, never fire them: user-invoked skills have no description, so nothing but the human can reach them.
+A router gives the human one entry point and the agent a conditional map of
+existing owners. In Pi it can explicitly read a manual-only leaf by path, then
+follow its workflow; it need not merely suggest that the human invoke it.
+
+Keep task classification, authority, and sequencing in the router. Keep detailed
+workflow/reference content with its owner and load only the selected branch.
+Invoking a router does not grant extra edit, spending, publication, or merge
+permission. An explanation stays an explanation; a plan stops before execution.

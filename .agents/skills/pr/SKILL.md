@@ -34,7 +34,14 @@ Use this template for writing the PR body:
 
 ## Sections
 
-Skip all preambles and keep prose brief. Use the user's domain language from `GLOSSARY.md`.
+Skip all preambles and keep prose brief. Use the user's domain language from the
+project's existing terminology source, such as `GLOSSARY.md` or `CONTEXT.md`.
+
+When editing rationale, evidence captions, or risk/rollback wording, read the
+shared [technical-writing reference](../../references/technical-writing.md).
+Name concrete observed results and qualify unverified claims; link long logs
+instead of pasting them. Preserve the visual Summary/Evidence/Merge Danger
+format above. Writing a body does not authorize publishing or merging it.
 
 ### Summary
 
