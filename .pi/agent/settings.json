@@ -7,7 +7,8 @@
     "npm:@gotgenes/pi-permission-system",
     "npm:pi-toggle-skills",
     "npm:pi-web-access",
-    "npm:pi-knowledge"
+    "npm:pi-knowledge",
+    "npm:@monotykamary/pi-better-openai"
   ],
   "enableSkillCommands": true,
   "showHardwareCursor": false,
