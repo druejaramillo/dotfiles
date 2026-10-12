@@ -4,11 +4,15 @@
   "packages": [
     "npm:@plannotator/pi-extension",
     "npm:@nicknisi/pi-cloak",
-    "npm:@gotgenes/pi-permission-system",
+    {
+      "source": "npm:@gotgenes/pi-permission-system",
+      "extensions": []
+    },
     "npm:pi-toggle-skills",
     "npm:pi-web-access",
     "npm:pi-knowledge",
-    "npm:@monotykamary/pi-better-openai"
+    "npm:@monotykamary/pi-better-openai",
+    "git:github.com/druejaramillo/pi-auto-perms"
   ],
   "enableSkillCommands": true,
   "showHardwareCursor": false,
