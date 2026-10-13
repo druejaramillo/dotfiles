@@ -4,7 +4,6 @@
   "packages": [
     "npm:@plannotator/pi-extension",
     "npm:@nicknisi/pi-cloak",
-    "npm:pi-toggle-skills",
     "npm:pi-web-access",
     "npm:pi-knowledge",
     "npm:@monotykamary/pi-better-openai",
