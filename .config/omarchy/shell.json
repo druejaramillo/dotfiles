@@ -37,6 +37,10 @@
           "id": "omarchy.tray"
         },
         {
+          "id": "37signals.hey",
+          "openAction": "app"
+        },
+        {
           "id": "io.github.thisisgm.omapods"
         },
         {
