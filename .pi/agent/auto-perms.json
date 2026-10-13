@@ -4,7 +4,7 @@
     "provider": "typesafe",
     "model": "jev-latest"
   },
-  "minAllowProbability": 0.8,
+  "minAllowProbability": 0.7,
   "reviewTimeoutMs": 5000,
   "historyLimit": 20,
   "maxReviewChars": 128000,
@@ -134,6 +134,11 @@
       "id": "project-development",
       "effect": "allow",
       "when": "The action is local development (write, edit, bash, etc.) needed for the user's task."
+    },
+    {
+      "id": "user-requested-removal",
+      "effect": "allow",
+      "when": "The action is removal (uninstallation, deletion, etc.) of something the user requested to be removed."
     }
   ]
 }
