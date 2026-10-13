@@ -4,9 +4,9 @@
     "provider": "typesafe",
     "model": "jev-latest"
   },
-  "minAllowProbability": 0.95,
+  "minAllowProbability": 0.85,
   "reviewTimeoutMs": 5000,
-  "historyLimit": 3,
+  "historyLimit": 5,
   "maxReviewChars": 32000,
   "permission": {
     "*": "ask",
@@ -126,5 +126,12 @@
     "external_directory_read": {
       "*": "allow"
     }
-  }
+  },
+  "rules": [
+    {
+      "id": "project-development",
+      "effect": "allow",
+      "when": "The action is local development (such as write/edit) needed for the user's task."
+    }
+  ]
 }
