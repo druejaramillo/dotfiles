@@ -6,7 +6,7 @@
   },
   "persistState": true,
   "notifyOnModelSwitch": true,
-  "active": false,
+  "active": true,
   "desiredActive": true,
   "usage": {
     "enabled": true,

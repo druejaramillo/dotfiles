@@ -1,8 +1,8 @@
 {
   "version": 1,
   "reviewer": {
-    "provider": "openai",
-    "model": "gpt-6-luna"
+    "provider": "typesafe",
+    "model": "jev-latest"
   },
   "minAllowProbability": 0.95,
   "reviewTimeoutMs": 5000,
