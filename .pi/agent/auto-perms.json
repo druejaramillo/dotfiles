@@ -4,10 +4,11 @@
     "provider": "typesafe",
     "model": "jev-latest"
   },
-  "minAllowProbability": 0.85,
+  "minAllowProbability": 0.8,
   "reviewTimeoutMs": 5000,
-  "historyLimit": 5,
-  "maxReviewChars": 32000,
+  "historyLimit": 20,
+  "maxReviewChars": 128000,
+  "maxTaskContextChars": 64000,
   "permission": {
     "*": "ask",
     "path": {
@@ -131,7 +132,7 @@
     {
       "id": "project-development",
       "effect": "allow",
-      "when": "The action is local development (such as write/edit) needed for the user's task."
+      "when": "The action is local development (write, edit, bash, etc.) needed for the user's task."
     }
   ]
 }

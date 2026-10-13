@@ -4,11 +4,11 @@
   "dependencies": {
     "@monotykamary/pi-better-openai": "^0.2.14",
     "@nicknisi/pi-cloak": "^0.1.2",
-    "@plannotator/pi-extension": "^0.28.17",
+    "@plannotator/pi-extension": "^0.28.18",
     "node-gyp": "^13.0.2",
     "pi-knowledge": "^0.11.0",
     "pi-toggle-skills": "^0.1.21",
-    "pi-web-access": "^0.39.0"
+    "pi-web-access": "^0.40.0"
   },
   "overrides": {
     "@monotykamary/pi-better-openai": {
