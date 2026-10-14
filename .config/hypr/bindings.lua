@@ -10,7 +10,7 @@ hl.unbind("SUPER + SHIFT + A")
 o.bind("SUPER + SHIFT + A", "ChatGPT", { launch = "chatgpt" })
 
 hl.unbind("SUPER + SHIFT + E")
-o.bind("SUPER + SHIFT + E", "Email", { launch = "mailspring --password-store=gnome-libsecret" })
+o.bind("SUPER + SHIFT + E", "Email", { launch = "hey-mail" })
 
 hl.unbind("SUPER + SHIFT + C")
 o.bind("SUPER + SHIFT + C", "Calendar", { launch = "rencal" })
