@@ -1,8 +1,8 @@
 id = "local.plannotator-herdr"
 name = "Plannotator Browser Relay"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.9.1"
-description = "Open Pi Plannotator reviews in local browser tabs; saved SSH machines use terminal-browser --ssh"
+description = "Advertise a selectable Plannotator renderer; open only reviews routed to this terminal-browser client"
 platforms = ["linux", "macos"]
 
 [[startup]]

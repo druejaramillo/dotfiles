@@ -14,6 +14,15 @@ export interface HerdrPaneRecord {
   tokens?: Record<string, string>;
 }
 
+/** A renderer advertises an expiring identity, not a device-specific address. */
+export interface PlannotatorRenderer {
+  id: string;
+  label: string;
+}
+
+/** Renderer metadata fits Herdr's 32-character token-name limit. */
+export const PLANNOTATOR_RENDERER_TOKEN_PREFIX = "pn_renderer_";
+
 /** Each saved machine's SSH target and session come from Herdr, not SSH_CONNECTION. */
 export interface HerdrMachineProfile {
   id: string;
@@ -28,6 +37,7 @@ export interface PlannotatorBrowserRequest {
   key: string;
   token: string;
   url: string;
+  rendererId: string;
   pane: HerdrPaneRecord;
 }
 
@@ -54,16 +64,41 @@ export function createPlannotatorRequestToken(): string {
   return `plannotator_${randomBytes(10).toString("hex")}`;
 }
 
-/** Ignore unrelated pane metadata; machine identity is supplied by the relay connection. */
-export function collectPlannotatorRequests(panes: Iterable<HerdrPaneRecord>): Map<string, PlannotatorBrowserRequest> {
+/** Encode a selected renderer explicitly; older broadcast relays safely ignore version 2. */
+export function encodePlannotatorRoute(url: string, rendererId: string): string {
+  if (!/^[a-f0-9]{20}$/.test(rendererId)) throw new Error("Plannotator routing: invalid renderer identity.");
+  const value = `v2:${rendererId}:${validatePlannotatorUrl(url)}`;
+  if (value.length > 80) throw new Error("Plannotator routing: review route exceeds Herdr's metadata limit.");
+  return value;
+}
+
+/** Discover renderers on this agent's server; labels are display text, never command arguments. */
+export function collectPlannotatorRenderers(panes: Iterable<HerdrPaneRecord>): PlannotatorRenderer[] {
+  const renderers = new Map<string, PlannotatorRenderer>();
+  for (const pane of panes) {
+    for (const [token, label] of Object.entries(pane.tokens ?? {})) {
+      if (!token.startsWith(PLANNOTATOR_RENDERER_TOKEN_PREFIX)) continue;
+      const id = token.slice(PLANNOTATOR_RENDERER_TOKEN_PREFIX.length);
+      if (!/^[a-f0-9]{20}$/.test(id) || !label || label.length > 80 || /[\x00-\x1f\x7f]/.test(label)) continue;
+      renderers.set(id, { id, label });
+    }
+  }
+  return [...renderers.values()].sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
+}
+
+/** Ignore broadcast and unrelated metadata; only the selected renderer may open a review. */
+export function collectPlannotatorRequests(panes: Iterable<HerdrPaneRecord>, rendererId: string): Map<string, PlannotatorBrowserRequest> {
   const requests = new Map<string, PlannotatorBrowserRequest>();
   for (const pane of panes) {
     for (const [token, raw] of Object.entries(pane.tokens ?? {})) {
       if (!/^plannotator_[a-f0-9]{20}$/.test(token)) continue;
       try {
-        const url = validatePlannotatorUrl(raw);
+        if (raw.length > 80) continue;
+        const match = /^v2:([a-f0-9]{20}):(http:.*)$/.exec(raw);
+        if (!match || match[1] !== rendererId) continue;
+        const url = validatePlannotatorUrl(match[2]);
         const key = `${pane.terminal_id}/${token}`;
-        requests.set(key, { key, token, url, pane });
+        requests.set(key, { key, token, url, rendererId, pane });
       } catch {
         // Metadata is untrusted input; never turn it into an arbitrary browser command.
       }

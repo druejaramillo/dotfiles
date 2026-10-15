@@ -1,111 +1,170 @@
-# Plannotator → Herdr → terminal-browser
+# Plannotator: terminal tab or private browser link
 
-Reuse the existing global Plannotator package and its native Pi commands:
+Keep the native Plannotator commands and tool. This companion changes their
+opener, not their review or approval behavior. Each live review has two
+independent destinations:
 
-- `/plannotator-last`
-- `/plannotator-annotate <file>`
-- `/plannotator-review [directory | PR URL]`
+- **Terminal tab:** a dedicated terminal-browser tab on one explicitly selected
+  renderer. For remote Pi hosts, terminal-browser uses the renderer's saved
+  Herdr SSH profile. Existing browsers never merge with the review.
+- **Browser link:** HTTPS through Tailscale Serve on the machine running Pi.
+  Open it from any authorized tailnet device. It works without Herdr and
+  without a rendering laptop being online. In Moshi, long-press the full URL
+  and choose **Open** for Safari.
 
-Every review opens in a **new Herdr tab**, never a split or a tab in someone
-else's browser. Submitting/closing the review stops its server; Pi then clears
-its request and the local relay closes only the browser pane it created. The
-empty tab disappears. If you add other panes to that tab, they are not closed.
+There are no hardcoded machine names, SSH client addresses, or designated
+rendering computer. Renderers advertise short-lived identities. Only the
+selected renderer opens a tab; other renderers ignore the request.
 
-## Local rendering for SSH machines
+## Choose where reviews open
 
-Herdr cannot put a local process in a remote workspace. The local relay watches
-its own server and enabled saved SSH machine profiles, using long-lived Herdr
-API subscriptions over SSH. It launches all browsers on the rendering machine:
+The default is **Ask** for each new review. Set a preference with:
 
 ```text
-remote Pi → remote loopback Plannotator server → Herdr request metadata
-          → local relay → Local Herdr tab
-          → terminal-browser open <actual-url> --no-merge --ssh <saved-target>
+/plannotator-open mode terminal
+/plannotator-open mode link
+/plannotator-open mode ask
 ```
 
-The target and remote session come from `herdr machine list --json`. Neither
-`SSH_CONNECTION` nor machine labels are used to guess a hostname. There is no
-remote browser installation, remote rendering, reverse SSH, or exposed HTTP
-listener. terminal-browser supplies its normal SSH network proxy.
+Terminal mode asks which renderer to use when several are available. The
+preference lasts in this Pi process until changed, `/reload`, or a new session.
+**Reattaching from another device does not change it.** On your phone, use
+`/plannotator-open mode link`. SSH variables and inherited terminal names
+cannot reliably identify the current viewer.
 
-Remote reviews appear under **Local**, labelled `Plannotator · <machine>`.
-Herdr's API cannot switch a client from a selected remote machine to Local:
-if you are looking at a remote machine, select the new Local tab in the sidebar.
-You never need to copy/open a Plannotator URL.
+Existing Plannotator plan, annotate, last-message, and code-review flows all use
+this opener. Browser-link publication is attempted for every review regardless
+of opening preference. The full HTTPS URL appears in the transcript and a
+widget while the review remains live. A publication failure does not close the
+review or prevent terminal opening.
 
-## Installation
+Reopen the **same live review**, without starting another review server:
 
-The Pi extension is auto-loaded from this directory. Keep the same directory
-on every machine running Pi, preserving the executable bit on
-`plannotator-open.ts`. Run `/reload` or restart Pi after syncing it. Node
-22.19+ must be on the pane's PATH; no runtime npm dependencies are required.
-The existing `npm:@plannotator/pi-extension` package remains unchanged.
+```text
+/plannotator-open
+/plannotator-open list
+/plannotator-open link
+/plannotator-open terminal
+/plannotator-open link latest
+/plannotator-open terminal pr-<id-or-unique-prefix>
+```
 
-On the **local rendering machine only**, link the companion Herdr plugin and
-enable the local relay once, from a Herdr pane:
+With several reviews, the command offers a chooser unless you supply an ID or
+`latest`. These `pr-` routing IDs are separate from the native tool's `pn-`
+review IDs. Showing a link does not close an existing terminal view; changing
+the preference affects future reviews. Unsaved comments in one browser are not
+promised to migrate to another browser.
+
+## Install or migrate
+
+Keep this directory on every machine running Pi. Preserve the executable bit on
+`plannotator-open.ts`. The native `npm:@plannotator/pi-extension` stays installed
+and unchanged. Node 22.19+ must be on the pane's PATH; runtime npm dependencies
+are not required.
+
+Finish outstanding reviews before reloading/upgrading: this companion's links
+and terminal routes belong to its current Pi runtime. `/reload` cleans them up,
+although a native Plannotator review may still exist independently.
+
+On **each computer you want to render terminal-browser tabs**, install
+terminal-browser and link/enable the renderer from a local graphical Herdr pane:
 
 ```sh
 herdr plugin link "$HOME/.pi/agent/extensions/plannotator-herdr"
 node "$HOME/.pi/agent/extensions/plannotator-herdr/plannotator-relay.ts" enable
 ```
 
-Renderer opt-in is stored in private local runtime state, not synced agent
-config. A synced plugin registry therefore cannot accidentally start rendering
-on a remote host. Once enabled, the plugin's startup hook starts the relay for
-new local Herdr servers; its start action is also idempotent. Install
-terminal-browser on this rendering machine, not on the remote agents.
+Renderer opt-in is private local runtime state, not synced configuration. It is
+not required on machines that only run Pi or on a phone. A renderer watches its
+own Herdr server and enabled saved SSH profiles; profiles and sessions are read
+from Herdr, never guessed from `SSH_CONNECTION`.
 
-The Pi side enables the opener only in a Herdr TUI session. It supports the
-installed Pi 1.1.0 locally and Pi 0.87.1 on the saved SSH hosts; older contexts
-without `ctx.mode` also use real terminal I/O to exclude RPC/print mode. It overrides
-`PLANNOTATOR_REMOTE`, `PLANNOTATOR_PORT`, `PLANNOTATOR_URL_HOST`, and
-`PLANNOTATOR_BROWSER` **inside that Pi process only**: loopback, random port,
-actual localhost URL, and the companion opener. It restores previous values on
-shutdown/reload. Shell configuration and Plannotator behavior outside Herdr
-are untouched. Plan reviews also benefit from the same opener.
-
-## Cleanup and failure behavior
-
-- Review-server shutdown clears its request after three failed one-second probes.
-- Closing the originating Pi pane, tab, or workspace also releases its browsers.
-- Request tokens have a 15-second lease, refreshed while the server is running.
-  An unexpected Pi crash cannot leave a request behind indefinitely.
-- Browser sessions hold a connection to the local relay. Losing that relay
-  closes only these sessions, not terminal-browser's shared daemon.
-- A remote API disconnect has a 30-second grace period before its tabs close;
-  subscriptions reconnect with backoff. Disabled/removed profiles are released.
-- Browser/pane moves use terminal identity, not stale workspace-qualified IDs.
-- Closing a browser manually does not immediately reopen it. Close its review or
-  rerun the relevant Pi command when you want to open a new review.
-- The relay reads metadata from your enabled saved machines. SSH authentication
-  uses OpenSSH/your agent; background subscriptions never approve host keys,
-  install software, or start/restart remote Herdr servers.
-- This is a single designated rendering-machine workflow. Do not enable a relay
-  on several rendering machines for the same agents unless you want several
-  independent browser tabs.
-
-## Diagnostics
-
-From a local Herdr pane:
+**Upgrading the previous relay:** after finishing its outstanding reviews,
+restart only the relay, then `/reload` Pi:
 
 ```sh
-node "$HOME/.pi/agent/extensions/plannotator-herdr/plannotator-relay.ts" status
 node "$HOME/.pi/agent/extensions/plannotator-herdr/plannotator-relay.ts" stop
 node "$HOME/.pi/agent/extensions/plannotator-herdr/plannotator-relay.ts" start
 ```
 
-Status shows the relay PID and connected machine IDs. Logs are in
-`relay.log` next to the reported relay socket, under
-`${XDG_STATE_HOME:-$HOME/.local/state}/plannotator-herdr/`.
+Stopping the relay closes the browser panes it owns, not Herdr or unrelated
+panes. `status` must report `protocol: 2` and a `renderer` identity. The previous
+relay cannot advertise renderers and safely ignores version-2 requests. New
+relays ignore old broadcast requests.
 
-The remote transport checks `herdr-api-bridge-v1`, the bridge used by Herdr's
-saved-machine CLI, before subscribing. Herdr 0.9.1 supports the required API.
-The current relay supports Linux/macOS rendering hosts and POSIX SSH servers.
+To withdraw a computer as a renderer, use `plannotator-relay.ts disable`.
+`start`, `stop`, and `status` remain available. A restarted renderer gets a new
+identity: if a preference points to its old identity, Pi asks you again rather
+than silently choosing another computer.
 
-Development only:
+## Tailnet prerequisites and access
+
+On every **Pi host** where you want browser links:
+
+- Install/sign in to Tailscale; enable MagicDNS and tailnet HTTPS certificates.
+- Use a Tailscale version supporting `tailscale serve unix:/path/to/socket`.
+- Permit your OS user to run Serve and allow your reviewing devices through
+  the tailnet ACLs/grants for the dynamically allocated HTTPS ports.
+
+By default, the proxy accepts only the Tailscale login that owns the Pi host.
+For tagged hosts (which have no owner), or an additional login you use, set an
+explicit login allowlist in the environment that launches Pi:
 
 ```sh
-npm install --ignore-scripts
+export PLANNOTATOR_TAILNET_ALLOW='me@example.com,other-login@example.com'
+```
+
+Then start/reload Pi. This adds logins, not device names; it does not change
+Tailscale ACLs. Tagged *client* devices that send no user identity are refused.
+HTTPS setup, login, ACL changes, and OS operator permissions remain your
+choices; the extension does not enable them or approve setup prompts.
+
+## Security and cleanup
+
+The real review server stays on loopback with a random port. The companion
+uses a private Unix-socket proxy and a per-review **foreground** Serve process:
+
+```text
+Pi host's loopback Plannotator server
+  ← private identity/Host/Origin-checking proxy
+  ← Tailscale Serve HTTPS
+  ← your authorized browser
+```
+
+The proxy rejects other identities, cross-origin requests, and native host-only
+control/polling endpoints. It strips forwarded identity and authorization
+headers before reaching Plannotator, while supporting streaming and WebSockets.
+It trusts Tailscale's injected identity headers only on its private Unix socket.
+
+Publication first checks Serve state for occupied ports. It never uses Funnel,
+`serve reset`, global `off`, `--yes`, or background Serve, and does not replace
+an Inbox or another service. Shutdown signals only its own foreground CLI.
+Even an unclean worker crash cannot expose an unrelated TCP service through a
+reused port: the route targets a unique private Unix socket.
+
+The worker's IPC connection is a lease: losing Pi closes its publication.
+Completing a review removes its link and terminal request after three failed
+one-second listener probes. Renderer advertisements and terminal requests have
+15-second leases. Remote transport disconnects retain existing terminal tabs
+for a 30-second grace period. Browser cleanup follows terminal identity across
+pane moves and never closes panes added by the user.
+
+Process-local environment overrides are restored on shutdown/reload. RPC,
+print, and JSON modes retain their previous browser configuration.
+
+## Diagnostics and development
+
+`/plannotator-open list` shows current links. `/plannotator-open link` retries
+failed publication. If no renderer appears, check relay `status`, saved SSH
+profiles, and logs under
+`${XDG_STATE_HOME:-$HOME/.local/state}/plannotator-herdr/`.
+
+Development checks:
+
+```sh
 npm test
 npm run check
 ```
+
+Tests use temporary review servers, Unix sockets, mocked Herdr APIs, and a fake
+Tailscale executable. They never change live Herdr layout or real Serve routes.

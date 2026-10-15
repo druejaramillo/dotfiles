@@ -1,15 +1,16 @@
 import { execFile, spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { closeSync, openSync } from "node:fs";
 import { access, mkdir, unlink, writeFile } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
-import { homedir } from "node:os";
+import { homedir, hostname } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { setTimeout as delay } from "node:timers/promises";
 import { callHerdrApi, watchHerdrPanes, type HerdrApiEndpoint } from "./herdr-json-api.ts";
 import { PlannotatorTabRelay, type PlannotatorReviewSource } from "./plannotator-tab-relay.ts";
+import { PlannotatorRendererRegistration } from "./plannotator-renderer-registration.ts";
 import { validateHerdrSshTarget, type HerdrMachineProfile, type HerdrPaneRecord } from "./plannotator-herdr-protocol.ts";
 
 const execFileAsync = promisify(execFile);
@@ -44,7 +45,8 @@ async function serveRelay(): Promise<void> {
   await mkdir(stateDirectory, { recursive: true, mode: 0o700 });
   const clients = new Set<Socket>();
   const globalAbort = new AbortController();
-  const tabRelay = new PlannotatorTabRelay(localEndpoint, relaySocket, relayLog);
+  const renderer = { id: randomBytes(10).toString("hex"), label: hostname() };
+  const tabRelay = new PlannotatorTabRelay(localEndpoint, relaySocket, renderer.id, relayLog);
   const workers = new Map<string, { signature: string; abort: AbortController; done: Promise<void> }>();
   const connected = new Set<string>();
   let stopping = false;
@@ -53,6 +55,11 @@ async function serveRelay(): Promise<void> {
   async function monitorSource(source: PlannotatorReviewSource, endpoint: HerdrApiEndpoint, signal: AbortSignal): Promise<void> {
     let retryMs = 1000;
     let staleTimer: ReturnType<typeof setTimeout> | undefined;
+    const registration = new PlannotatorRendererRegistration(endpoint, renderer);
+    const advertise = () => { void registration.refresh().catch((error: unknown) => {
+      if (!signal.aborted) relayLog(`Renderer advertisement on ${source.label}: ${String(error)}`);
+    }); };
+    const heartbeat = setInterval(advertise, 5000);
     try {
       while (!signal.aborted) {
         try {
@@ -61,9 +68,12 @@ async function serveRelay(): Promise<void> {
             retryMs = 1000;
             if (staleTimer) { clearTimeout(staleTimer); staleTimer = undefined; }
             void tabRelay.updateSource(source, panes);
+            registration.update(panes);
+            advertise();
           }, signal);
         } catch (error) {
           connected.delete(source.id);
+          registration.update([]);
           if (signal.aborted) break;
           relayLog(`${source.label}: ${error instanceof Error ? error.message : String(error)}`);
           if (source.id === "local") { void stopRelay(); break; }
@@ -75,7 +85,9 @@ async function serveRelay(): Promise<void> {
         }
       }
     } finally {
+      clearInterval(heartbeat);
       if (staleTimer) clearTimeout(staleTimer);
+      await registration.stop();
       connected.delete(source.id);
     }
   }
@@ -123,7 +135,7 @@ async function serveRelay(): Promise<void> {
       buffer = buffer.slice(newline + 1);
       try {
         const request = JSON.parse(line) as { id: string; method: string };
-        const status = { pid: process.pid, herdrSocket, relaySocket, connected: [...connected] };
+        const status = { pid: process.pid, protocol: 2, renderer, herdrSocket, relaySocket, connected: [...connected] };
         if (!["lease", "status", "stop"].includes(request.method)) throw new Error("Unsupported local relay method.");
         client.write(`${JSON.stringify({ id: request.id, result: status })}\n`);
         if (request.method === "stop") void stopRelay();
@@ -198,9 +210,15 @@ switch (process.argv[2]) {
     await writeFile(rendererEnabledFile, "Local Plannotator renderer explicitly enabled.\n", { mode: 0o600 });
     await startRelay();
     break;
+  case "disable":
+    await unlink(rendererEnabledFile).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+    await callHerdrApi(relayEndpoint, "stop").catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT" && error.code !== "ECONNREFUSED") throw error;
+    });
+    break;
   case "start": await startRelay(); break;
   case "serve": await serveRelay(); break;
   case "status": console.log(JSON.stringify(await callHerdrApi(relayEndpoint, "status"), null, 2)); break;
   case "stop": await callHerdrApi(relayEndpoint, "stop"); break;
-  default: throw new Error("Plannotator Herdr: usage: node plannotator-relay.ts enable|start|status|stop");
+  default: throw new Error("Plannotator Herdr: usage: node plannotator-relay.ts enable|disable|start|status|stop");
 }

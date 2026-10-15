@@ -12,12 +12,13 @@ import { isInteractivePlannotatorSession } from "./plannotator-herdr-extension.t
 import { PlannotatorTabRelay } from "./plannotator-tab-relay.ts";
 import {
   buildHerdrRemoteBridgeCommand, buildPlannotatorBrowserArgs, collectPlannotatorRequests,
-  createPlannotatorRequestToken, PLANNOTATOR_REQUEST_TTL_MS, validatePlannotatorUrl,
+  collectPlannotatorRenderers, createPlannotatorRequestToken, encodePlannotatorRoute, PLANNOTATOR_RENDERER_TOKEN_PREFIX, PLANNOTATOR_REQUEST_TTL_MS, validatePlannotatorUrl,
   type HerdrMachineProfile, type HerdrPaneRecord,
 } from "./plannotator-herdr-protocol.ts";
 
+const rendererId = "a123456789abcdef0123";
 const token = "plannotator_0123456789abcdef0123";
-const producer: HerdrPaneRecord = { pane_id: "w1:p1", terminal_id: "producer-1", workspace_id: "w1", tab_id: "w1:t1", tokens: { [token]: "http://localhost:19432" } };
+const producer: HerdrPaneRecord = { pane_id: "w1:p1", terminal_id: "producer-1", workspace_id: "w1", tab_id: "w1:t1", tokens: { [token]: encodePlannotatorRoute("http://localhost:19432", rendererId), [`${PLANNOTATOR_RENDERER_TOKEN_PREFIX}${rendererId}`]: "Example renderer" } };
 const machine: HerdrMachineProfile = { id: "saved-puter", label: "Puter", target: "puter", session: "default", enabled: true };
 
 function mockControl() {
@@ -106,7 +107,12 @@ test("only bounded loopback review URLs and single-argv SSH targets are allowed"
   assert.throws(() => buildPlannotatorBrowserArgs("http://localhost:19432", "host other-arg"));
   assert.equal(validatePlannotatorUrl("http://127.0.0.1:45000/path?token=abc"), "http://127.0.0.1:45000/path?token=abc");
   assert.equal(createPlannotatorRequestToken().length, 32);
-  assert.equal(collectPlannotatorRequests([{ ...producer, tokens: { unrelated: "http://localhost:19432", [token]: "http://evil.example:19432" } }]).size, 0);
+  assert.equal(collectPlannotatorRequests([{ ...producer, tokens: { unrelated: "http://localhost:19432", [token]: "http://evil.example:19432" } }], rendererId).size, 0);
+  assert.equal(collectPlannotatorRequests([producer], "b123456789abcdef0123").size, 0);
+  assert.equal(collectPlannotatorRequests([{ ...producer, tokens: { [token]: "http://localhost:19432" } }], rendererId).size, 0);
+  assert.equal(collectPlannotatorRequests([producer], rendererId).size, 1);
+  assert.throws(() => encodePlannotatorRoute("http://localhost:19432", "unsafe renderer"));
+  assert.deepEqual(collectPlannotatorRenderers([producer, producer]), [{ id: rendererId, label: "Example renderer" }]);
 });
 
 test("SSH API transport pins the saved session and quotes it rather than guessing from SSH_CONNECTION", () => {
@@ -120,7 +126,7 @@ test("SSH API transport pins the saved session and quotes it rather than guessin
 
 test("native requests become dedicated local tabs and close only their owned panes", async () => {
   const mock = mockControl();
-  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", assert.fail, mock.control);
+  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", rendererId, assert.fail, mock.control);
   const source = { id: "local", label: "Local" };
   await relay.updateSource(source, [producer]);
   await relay.updateSource(source, [producer]);
@@ -139,7 +145,7 @@ test("native requests become dedicated local tabs and close only their owned pan
 
 test("identical remote pane IDs stay machine-scoped and every remote browser gets its saved --ssh target", async () => {
   const mock = mockControl();
-  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", assert.fail, mock.control);
+  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", rendererId, assert.fail, mock.control);
   const second = { ...machine, id: "saved-hetzner", label: "Hetzner", target: "root@hetzner-puter" };
   await relay.updateSource({ id: machine.id, label: machine.label, machine }, [producer]);
   await relay.updateSource({ id: second.id, label: second.label, machine: second }, [producer]);
@@ -149,12 +155,12 @@ test("identical remote pane IDs stay machine-scoped and every remote browser get
   await relay.updateSource({ id: machine.id, label: machine.label, machine }, []);
   assert.equal(mock.panes.filter((pane) => pane.terminal_id.startsWith("browser-")).length, 1);
   await relay.stop();
-  assert.throws(() => new PlannotatorTabRelay({ machine }, "lease.sock", assert.fail));
+  assert.throws(() => new PlannotatorTabRelay({ machine }, "lease.sock", rendererId, assert.fail));
 });
 
 test("moving the producer does not duplicate a review; moving its browser preserves safe cleanup", async () => {
   const mock = mockControl();
-  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", assert.fail, mock.control);
+  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", rendererId, assert.fail, mock.control);
   const source = { id: "local", label: "Local" };
   await relay.updateSource(source, [producer]);
   await relay.updateSource(source, [{ ...producer, pane_id: "wMoved:pNew", workspace_id: "wMoved" }]);
@@ -169,7 +175,7 @@ test("a rename failure cannot orphan a successfully launched browser", async () 
   const mock = mockControl();
   const errors: string[] = [];
   mock.failRename();
-  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", (message) => errors.push(message), mock.control);
+  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", rendererId, (message) => errors.push(message), mock.control);
   await relay.updateSource({ id: "local", label: "Local" }, [producer]);
   await relay.stop();
   assert.equal(mock.panes.length, 1);
@@ -180,7 +186,7 @@ test("closing a review during asynchronous tab creation cleans up the late resul
   const mock = mockControl();
   let release: (() => void) | undefined;
   let launched = false;
-  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", assert.fail, async (method, params) => {
+  const relay = new PlannotatorTabRelay({ socket: "local.sock" }, "lease.sock", rendererId, assert.fail, async (method, params) => {
     if (method === "plugin.pane.open") {
       launched = true;
       await new Promise<void>((resolve) => { release = resolve; });
@@ -218,7 +224,7 @@ test("subscription bootstrap buffers reviews opened between acknowledgement and 
   const abort = new AbortController();
   let observed = false;
   const watch = watchHerdrPanes(endpoint, (panes) => {
-    if (collectPlannotatorRequests(panes).size === 1) observed = true;
+    if (collectPlannotatorRequests(panes, rendererId).size === 1) observed = true;
   }, abort.signal);
   await waitUntil(() => observed);
   abort.abort();
@@ -245,7 +251,7 @@ test("pane move subscriptions replace old IDs instead of leaving stale review me
   } })}\n`);
   await waitUntil(() => latest?.[0]?.pane_id === "wMoved:p9");
   assert.equal(latest!.length, 1);
-  assert.equal(collectPlannotatorRequests(latest!).size, 0);
+  assert.equal(collectPlannotatorRequests(latest!, rendererId).size, 0);
   abort.abort();
   await watch;
 });
@@ -276,7 +282,9 @@ test("shutdown drains an in-flight publisher write before clearing its request",
   const reports: Record<string, unknown>[] = [];
   let releaseWrite: (() => void) | undefined;
   const endpoint = await fakeHerdrSocket(t, (request, socket) => {
-    if (request.method === "pane.current") {
+    if (request.method === "pane.list") {
+      reply(socket, request.id, { panes: [producer] });
+    } else if (request.method === "pane.current") {
       reply(socket, request.id, { pane: producer });
     } else if (request.method === "pane.report_metadata") {
       reports.push(request.params);
@@ -291,14 +299,19 @@ test("shutdown drains an in-flight publisher write before clearing its request",
   const address = http.address();
   assert.ok(address && typeof address === "object");
   const url = `http://localhost:${address.port}`;
-  const publisher = await startPlannotatorPublisher(endpoint.socket, producer.pane_id, assert.fail);
+  const publisher = await startPlannotatorPublisher({
+    herdr: { socket: endpoint.socket, callerPaneId: producer.pane_id }, reportError: assert.fail,
+    onOpen: () => {}, onChange: () => {},
+    publishTailnet: async () => ({ url: "https://test.example.ts.net:23456", stop: async () => {} }),
+  });
   t.after(() => publisher.stop());
-  const launch = callHerdrApi({ socket: publisher.socket }, "open", { url }).catch(() => {});
+  await callHerdrApi({ socket: publisher.socket }, "open", { url });
+  const launch = publisher.openTerminal(publisher.getReviews()[0].id, rendererId);
   await waitUntil(() => releaseWrite !== undefined);
   const stopped = publisher.stop();
   releaseWrite!();
   await Promise.all([launch, stopped]);
-  assert.equal(Object.values(reports[0].tokens as object)[0], url);
+  assert.equal(Object.values(reports[0].tokens as object)[0], encodePlannotatorRoute(url, rendererId));
   assert.ok(reports.length >= 2);
   assert.ok(reports.slice(1).every((report) => Object.values(report.tokens as object)[0] === null));
 });
@@ -307,7 +320,9 @@ test("publisher opens real URLs, follows caller context, and clears tokens when 
   const reports: Record<string, unknown>[] = [];
   const errors: string[] = [];
   const endpoint = await fakeHerdrSocket(t, (request, socket) => {
-    if (request.method === "pane.current") {
+    if (request.method === "pane.list") {
+      reply(socket, request.id, { panes: [producer] });
+    } else if (request.method === "pane.current") {
       assert.equal(request.params.caller_pane_id, "wOriginal:p1");
       reply(socket, request.id, { pane: { ...producer, pane_id: "wMoved:p9" } });
     } else if (request.method === "pane.report_metadata") {
@@ -320,16 +335,24 @@ test("publisher opens real URLs, follows caller context, and clears tokens when 
   const address = http.address();
   assert.ok(address && typeof address === "object");
   const url = `http://localhost:${address.port}`;
-  const publisher = await startPlannotatorPublisher(endpoint.socket, "wOriginal:p1", (message) => errors.push(message));
+  let publicationStopped = false;
+  const publisher = await startPlannotatorPublisher({
+    herdr: { socket: endpoint.socket, callerPaneId: "wOriginal:p1" }, reportError: (message) => errors.push(message),
+    onOpen: () => {}, onChange: () => {},
+    publishTailnet: async () => ({ url: "https://test.example.ts.net:23456", stop: async () => { publicationStopped = true; } }),
+  });
   t.after(() => publisher.stop());
   t.after(() => { http.close(); });
   await callHerdrApi({ socket: publisher.socket }, "open", { url });
+  assert.equal(reports.length, 0, "Opening a review must not broadcast to renderers");
+  await publisher.openTerminal(publisher.getReviews()[0].id, rendererId);
   assert.equal(reports.length, 1);
   assert.equal(reports[0].pane_id, "wMoved:p9");
   assert.equal(reports[0].ttl_ms, PLANNOTATOR_REQUEST_TTL_MS);
-  assert.equal(Object.values(reports[0].tokens as object)[0], url);
+  assert.equal(Object.values(reports[0].tokens as object)[0], encodePlannotatorRoute(url, rendererId));
   await new Promise<void>((resolve) => http.close(() => resolve()));
-  await waitUntil(() => reports.some((report) => Object.values(report.tokens as object)[0] === null));
+  await waitUntil(() => reports.some((report) => Object.values(report.tokens as object)[0] === null) && publicationStopped);
+  assert.equal(publisher.getReviews().length, 0);
   assert.deepEqual(errors, []);
   await publisher.stop();
   await publisher.stop();

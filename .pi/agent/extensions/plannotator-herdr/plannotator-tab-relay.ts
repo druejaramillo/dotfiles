@@ -19,16 +19,19 @@ export class PlannotatorTabRelay {
   private stopped = false;
   private readonly control: HerdrControl;
   private readonly leaseSocket: string;
+  private readonly rendererId: string;
   private readonly reportError: (message: string) => void;
 
   constructor(
     localEndpoint: HerdrApiEndpoint,
     leaseSocket: string,
+    rendererId: string,
     reportError: (message: string) => void,
     control?: HerdrControl,
   ) {
     if (!("socket" in localEndpoint)) throw new Error("Plannotator Herdr: browser tabs require a local Herdr socket.");
     this.leaseSocket = leaseSocket;
+    this.rendererId = rendererId;
     this.reportError = reportError;
     this.control = control ?? ((method, params) => callHerdrApi(localEndpoint, method, params));
   }
@@ -42,7 +45,7 @@ export class PlannotatorTabRelay {
       this.sources.set(source.id, state);
     }
     state.source = source;
-    state.desired = collectPlannotatorRequests(panes);
+    state.desired = collectPlannotatorRequests(panes, this.rendererId);
     const current = state;
     this.queue = this.queue.then(() => this.reconcileSource(current)).catch((error: unknown) => {
       this.reportError(error instanceof Error ? error.message : String(error));
