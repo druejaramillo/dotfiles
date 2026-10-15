@@ -67,8 +67,9 @@ export function publishPlannotatorTailnet(
 ): Promise<PlannotatorTailnetPublication> {
   validatePlannotatorUrl(url);
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [fileURLToPath(import.meta.url), "--worker"], {
-      stdio: ["ignore", "ignore", "pipe", "ipc"], env: workerEnvironment,
+    // Standalone Pi bundles its runtime: process.execPath names Pi, not Node.
+    const child = spawn("node", [fileURLToPath(import.meta.url), "--worker"], {
+      stdio: ["ignore", "ignore", "pipe", "ipc"], serialization: "json", env: workerEnvironment,
     });
     let ready = false;
     let stopping: Promise<void> | undefined;
@@ -93,7 +94,9 @@ export function publishPlannotatorTailnet(
       void stop();
     };
     const timeout = setTimeout(() => fail("publication timed out; check Tailscale Serve permissions and HTTPS setup."), 20_000);
-    child.on("error", (error) => fail(tailnetErrorMessage(error)));
+    child.on("error", (error: NodeJS.ErrnoException) => fail(error.code === "ENOENT"
+      ? "Node.js 22.19+ was not found on Pi's PATH. Install Node and restart Pi."
+      : tailnetErrorMessage(error)));
     child.on("exit", (code) => fail(`publisher exited (${code ?? "signal"})${stderr ? `: ${tailnetErrorMessage(stderr)}` : "."}`));
     child.on("message", (message: WorkerReply) => {
       if (stopping) return;

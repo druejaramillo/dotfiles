@@ -61,7 +61,9 @@ promised to migrate to another browser.
 Keep this directory on every machine running Pi. Preserve the executable bit on
 `plannotator-open.ts`. The native `npm:@plannotator/pi-extension` stays installed
 and unchanged. Node 22.19+ must be on the pane's PATH; runtime npm dependencies
-are not required.
+are not required. The publisher explicitly launches `node`, including when Pi
+is a self-contained Bun executable: Pi's `process.execPath` is not a Node
+interpreter. JSON IPC is used between the host and worker.
 
 Finish outstanding reviews before reloading/upgrading: this companion's links
 and terminal routes belong to its current Pi runtime. `/reload` cleans them up,
@@ -187,3 +189,17 @@ This temporarily publishes only a disposable marker, checks HTTPS and
 cross-origin rejection, stops its foreground Serve process, and verifies that
 the pre-existing Serve configuration is unchanged. It never reads review content
 or resets Serve. Normal tests do not run this script.
+
+To also verify the actual Pi host runtime (including a self-contained Pi binary),
+run the opt-in smoke extension instead:
+
+```sh
+pi --offline --no-approve --no-session --no-tools --no-extensions --no-mcp \
+  --no-skills --no-prompt-templates --no-context-files --no-themes --mode rpc \
+  --extension ./scripts/plannotator-host-smoke-extension.ts \
+  --plannotator-publish-probe </dev/null
+```
+
+It uses the same disposable probe, shuts down automatically, and makes no
+prompts or model requests. Use the actual Pi executable if your shell wrapper
+also installs or updates Pi; the test does not need an update.

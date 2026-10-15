@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { createServer, request, type IncomingHttpHeaders } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -160,6 +160,7 @@ test("Unix proxy passes WebSocket upgrades and bidirectional payloads", { timeou
 async function fakeTailscale(t: TestContext) {
   const directory = await mkdtemp(join(tmpdir(), "pn-tailscale-test-"));
   const log = join(directory, "commands.jsonl");
+  await symlink(process.execPath, join(directory, "node"));
   // This executable replaces PATH completely: these lifecycle tests cannot invoke real Tailscale.
   await writeFile(join(directory, "tailscale"), `#!${process.execPath}\n` + `
 import { appendFileSync } from 'node:fs';
@@ -253,4 +254,28 @@ test("ordinary Serve operators can publish without privileged Unix-socket target
   const started = (await fixture.commands()).find((command) => command.type === "start")!;
   assert.match(started.args.at(-1)!, /^http:\/\/127\.0\.0\.1:\d+\//);
   assert.ok(started.args.every((arg) => !arg.startsWith("unix:") && arg !== "sudo"));
+});
+
+test("a bundled Pi host launches the worker with standalone Node, not its own executable", { timeout: 15_000 }, async (t) => {
+  const fixture = await fakeTailscale(t);
+  const realNode = process.execPath;
+  const bundledPi = join(fixture.directory, "bundled-pi");
+  await writeFile(bundledPi, `#!${realNode}\nconsole.error('Error: Unknown option: --worker'); process.exit(1);\n`, { mode: 0o700 });
+  try {
+    process.execPath = bundledPi;
+    const publication = await publishPlannotatorTailnet("http://localhost:19432", assert.fail, fixture.environment);
+    t.after(() => publication.stop());
+    assert.match(publication.url, /^https:\/\/agent\.example\.ts\.net:/);
+    await publication.stop();
+    assert.ok((await fixture.commands()).some((command) => command.type === "start"));
+  } finally {
+    process.execPath = realNode;
+  }
+});
+
+test("missing standalone Node gives an actionable error instead of running Pi as the worker", async (t) => {
+  const fixture = await fakeTailscale(t);
+  await assert.rejects(publishPlannotatorTailnet("http://localhost:19432", assert.fail, {
+    ...fixture.environment, PATH: join(fixture.directory, "missing-bin"),
+  }), /Node\.js 22\.19\+ was not found on Pi's PATH/);
 });
