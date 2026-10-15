@@ -139,6 +139,16 @@
       "id": "user-requested-removal",
       "effect": "allow",
       "when": "The action is removal (uninstallation, deletion, etc.) of something the user requested to be removed."
+    },
+    {
+      "id": "git-actions",
+      "effect": "allow",
+      "when": "The action uses git/Github (including through `gh` CLI) to track work progress. The ONLY exception is destructive actions, unless requested by the user."
+    },
+    {
+      "id": "edit-docs",
+      "effect": "allow",
+      "when": "The action involves writing and/or editing documentation, especially planning-related docs."
     }
   ]
 }
