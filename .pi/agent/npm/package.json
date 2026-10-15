@@ -4,7 +4,7 @@
   "dependencies": {
     "@monotykamary/pi-better-openai": "^0.2.14",
     "@nicknisi/pi-cloak": "^0.1.2",
-    "@plannotator/pi-extension": "^0.28.19",
+    "@plannotator/pi-extension": "^0.28.20",
     "node-gyp": "^13.0.2",
     "pi-knowledge": "^0.11.0",
     "pi-web-access": "^0.40.0"
