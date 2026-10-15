@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer, request, type IncomingHttpHeaders } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -33,6 +33,24 @@ function socketRequest(socketPath: string, path: string, headers: IncomingHttpHe
     req.on("error", reject);
     req.end(body);
   });
+}
+
+function httpProxyRequest(url: string, headers: IncomingHttpHeaders = {}, method = "GET", body = "") {
+  return new Promise<{ status: number; body: string }>((resolve, reject) => {
+    const req = request(url, { headers, method, agent: false }, (res) => {
+      let text = "";
+      res.on("data", (chunk: Buffer) => { text += chunk.toString(); });
+      res.on("end", () => resolve({ status: res.statusCode!, body: text }));
+      res.on("error", reject);
+    });
+    req.on("error", reject);
+    req.end(body);
+  });
+}
+
+async function proxyIsClosed(target: string): Promise<boolean> {
+  try { await httpProxyRequest(new URL(target).origin); return false; }
+  catch (error) { return (error as NodeJS.ErrnoException).code === "ECONNREFUSED"; }
 }
 
 test("tailnet identity is discovered dynamically and tagged hosts require a user allowlist", () => {
@@ -150,8 +168,12 @@ if (args[0] === 'status') { console.log(${JSON.stringify(JSON.stringify(status))
 if (args[0] === 'serve' && args[1] === 'status') { console.log('{"TCP":{"443":{"HTTPS":true}}}'); process.exit(0); }
 if (args[0] !== 'serve' || !args.includes('--bg=false') || args.some(arg => ['reset','clear','off','--yes'].includes(arg))) process.exit(90);
 const port = args.find(arg => arg.startsWith('--https=')).split('=')[1];
-const socket = args.at(-1).slice('unix:'.length);
-appendFileSync(process.env.FAKE_TAILSCALE_LOG, JSON.stringify({type:'start', args, pid:process.pid, socket})+'\\n');
+const target = args.at(-1);
+appendFileSync(process.env.FAKE_TAILSCALE_LOG, JSON.stringify({type:'start', args, pid:process.pid, target})+'\\n');
+if (process.env.FAKE_TAILSCALE_DENY_UNIX === '1' && args.at(-1).startsWith('unix:')) {
+  console.error("sending serve config: 401 Unauthorized: must be root, or be an operator and able to run 'sudo tailscale' to serve a path or Unix socket");
+  process.exit(1);
+}
 if (process.env.FAKE_TAILSCALE_FAIL === '1') { console.error('fake Serve permission denied'); process.exit(1); }
 console.log('Available within your tailnet: https://agent.example.ts.net:'+port);
 setInterval(() => {}, 1000);
@@ -159,32 +181,32 @@ process.on('SIGTERM', () => { appendFileSync(process.env.FAKE_TAILSCALE_LOG, JSO
 `, { mode: 0o700 });
   t.after(() => rm(directory, { recursive: true, force: true }));
   const environment = { ...process.env, PATH: directory, FAKE_TAILSCALE_LOG: log };
-  async function commands(): Promise<{ type: string; args: string[]; pid: number; socket: string }[]> {
+  async function commands(): Promise<{ type: string; args: string[]; pid: number; target: string }[]> {
     try { return (await readFile(log, "utf8")).trim().split("\n").filter(Boolean).map((line) => JSON.parse(line)); }
     catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
   }
   return { directory, environment, commands };
 }
 
-test("publication owns only a foreground Serve process and removes its private socket on stop", { timeout: 15_000 }, async (t) => {
+test("publication owns only a foreground Serve process and closes its loopback proxy on stop", { timeout: 15_000 }, async (t) => {
   const fixture = await fakeTailscale(t);
   const publication = await publishPlannotatorTailnet("http://localhost:19432/plan?rev=1", assert.fail, fixture.environment);
   t.after(() => publication.stop());
   assert.match(publication.url, /^https:\/\/agent\.example\.ts\.net:\d+\/plan\?rev=1$/);
   const started = (await fixture.commands()).find((command) => command.type === "start")!;
-  assert.ok(started.args.at(-1)?.startsWith("unix:/"));
+  assert.match(started.target, /^http:\/\/127\.0\.0\.1:\d+\/pn-[a-f0-9]{48}$/);
   assert.ok(started.args.includes("--bg=false"));
-  assert.ok((await stat(started.socket)).isSocket());
+  assert.equal((await httpProxyRequest(new URL(started.target).origin)).status, 403);
   await publication.stop();
   assert.ok((await fixture.commands()).some((command) => command.type === "stop"));
-  await assert.rejects(stat(started.socket), { code: "ENOENT" });
+  assert.ok(await proxyIsClosed(started.target));
 });
 
-test("a Serve startup failure is reported and its Unix socket is cleaned up", { timeout: 15_000 }, async (t) => {
+test("a Serve startup failure is reported and its loopback proxy is cleaned up", { timeout: 15_000 }, async (t) => {
   const fixture = await fakeTailscale(t);
   await assert.rejects(publishPlannotatorTailnet("http://localhost:19432", assert.fail, { ...fixture.environment, FAKE_TAILSCALE_FAIL: "1" }), /permission denied/);
   const started = (await fixture.commands()).find((command) => command.type === "start")!;
-  await waitUntil(async () => { try { await stat(started.socket); return false; } catch { return true; } });
+  await waitUntil(() => proxyIsClosed(started.target));
 });
 
 test("losing the Pi parent lease stops the publisher without a rendering laptop", { timeout: 15_000 }, async (t) => {
@@ -202,5 +224,33 @@ test("losing the Pi parent lease stops the publisher without a rendering laptop"
   const started = (await fixture.commands()).find((command) => command.type === "start")!;
   parent.kill("SIGKILL");
   await waitUntil(async () => (await fixture.commands()).some((command) => command.type === "stop"));
-  await waitUntil(async () => { try { await stat(started.socket); return false; } catch { return true; } });
+  await waitUntil(() => proxyIsClosed(started.target));
+});
+
+test("loopback proxy requires the private backend path and identity before forwarding", async (t) => {
+  let requests = 0;
+  const upstream = createServer((req, res) => { requests++; res.end(`review ${req.url}`); });
+  await new Promise<void>((resolve) => upstream.listen(0, "127.0.0.1", resolve));
+  const address = upstream.address();
+  assert.ok(address && typeof address === "object");
+  const proxy = await startPlannotatorTailnetProxy({ upstreamUrl: `http://127.0.0.1:${address.port}`, publicOrigin, allowedLogins });
+  t.after(async () => { await proxy.stop(); upstream.closeAllConnections(); upstream.close(); });
+  const target = new URL(proxy.targetUrl);
+  assert.equal(target.hostname, "127.0.0.1");
+  assert.equal((await httpProxyRequest(target.origin + "/api/plan", identityHeaders)).status, 403);
+  assert.equal((await httpProxyRequest(proxy.targetUrl + "/api/plan")).status, 403);
+  assert.equal(requests, 0);
+  assert.equal((await httpProxyRequest(proxy.targetUrl + "/api/plan?rev=1", identityHeaders)).body, "review /api/plan?rev=1");
+  assert.equal((await httpProxyRequest(proxy.targetUrl + "/api/host/close", identityHeaders, "POST")).status, 403);
+  assert.equal((await httpProxyRequest(proxy.targetUrl + "/api/plan", { ...identityHeaders, origin: "https://evil.example" })).status, 403);
+  assert.equal(requests, 1);
+});
+
+test("ordinary Serve operators can publish without privileged Unix-socket targets", { timeout: 15_000 }, async (t) => {
+  const fixture = await fakeTailscale(t);
+  const publication = await publishPlannotatorTailnet("http://localhost:19432", assert.fail, { ...fixture.environment, FAKE_TAILSCALE_DENY_UNIX: "1" });
+  t.after(() => publication.stop());
+  const started = (await fixture.commands()).find((command) => command.type === "start")!;
+  assert.match(started.args.at(-1)!, /^http:\/\/127\.0\.0\.1:\d+\//);
+  assert.ok(started.args.every((arg) => !arg.startsWith("unix:") && arg !== "sudo"));
 });

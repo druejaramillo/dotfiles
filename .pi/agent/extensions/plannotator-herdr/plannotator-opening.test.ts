@@ -137,3 +137,26 @@ test("two relays observe the same request but only the selected renderer opens a
   await first.stop();
   await second.stop();
 });
+
+test("choosing Browser link does not repeat a failed automatic publication; explicit link command retries", async () => {
+  const failedReview = { id: "pr-failed", url: "http://localhost:23456", publishing: false, tailnetError: "401 Unauthorized" };
+  let attempts = 0;
+  const opening = new PlannotatorReviewOpening({
+    getReviews: () => [failedReview], getRenderers: async () => [], openTerminal: async () => assert.fail(),
+    retryTailnet: async () => { attempts++; },
+  }, {
+    select: async () => "Browser link", notify: () => {}, modeChanged: () => {},
+  });
+  await opening.openNewReview(failedReview);
+  assert.equal(attempts, 0, "A failed publication must not retry automatically when the chooser resolves");
+  await opening.handleCommand("link");
+  assert.equal(attempts, 1);
+});
+
+test("a browser-only chooser explains how to make terminal renderers available", async () => {
+  const fixture = openingFixture();
+  fixture.setRenderers([]);
+  fixture.answers.push("Browser link");
+  await fixture.opening.openNewReview(review);
+  assert.ok(fixture.notices.some((notice) => notice.includes("renderer") && notice.includes("relay")));
+});

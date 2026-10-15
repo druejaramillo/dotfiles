@@ -38,10 +38,10 @@ export class PlannotatorReviewOpening {
     catch (error) { this.ui.notify(`Plannotator routing: renderer discovery failed: ${String(error)}`, "warning"); return []; }
   }
 
-  private async showLink(id: string): Promise<void> {
+  private async showLink(id: string, retryFailed = false): Promise<void> {
     let review = this.currentReview(id);
     if (!review || this.stopped) return;
-    if (!review.tailnetUrl) await this.publisher.retryTailnet(id);
+    if (!review.tailnetUrl && (review.publishing || retryFailed || !review.tailnetError)) await this.publisher.retryTailnet(id);
     review = this.currentReview(id);
     if (!review || this.stopped) return;
     if (review.tailnetUrl) this.ui.notify(`Plannotator ${review.id}: ${review.tailnetUrl}`, "info");
@@ -63,6 +63,7 @@ export class PlannotatorReviewOpening {
   private async chooseDestination(id: string): Promise<void> {
     const renderers = await this.renderers();
     if (this.stopped || !this.currentReview(id)) return;
+    if (!renderers.length) this.ui.notify("Plannotator: no terminal renderer is advertising. Start or restart the updated relay on your viewing computer; Browser link works independently.", "info");
     const labels = renderers.map((renderer) => `Terminal tab · ${renderer.label} · ${renderer.id.slice(0, 6)}`);
     const selected = await this.ui.select("Open Plannotator where? (/plannotator-open mode sets a preference)", ["Browser link", ...labels]);
     if (this.stopped || !this.currentReview(id) || !selected) return;
@@ -137,7 +138,7 @@ export class PlannotatorReviewOpening {
       if (action && action !== "link" && action !== "terminal") throw new Error("Plannotator routing: use /plannotator-open [link|terminal] [review-id], list, or mode [ask|terminal|link].");
       const review = await this.chooseReview(id);
       if (!review || this.stopped) return;
-      if (action === "link") await this.showLink(review.id);
+      if (action === "link") await this.showLink(review.id, true);
       else if (action === "terminal") {
         const renderer = await this.chooseRenderer();
         if (renderer && !this.stopped && this.currentReview(review.id)) await this.publisher.openTerminal(review.id, renderer.id);

@@ -1,8 +1,5 @@
 import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { randomInt } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { validatePlannotatorUrl } from "./plannotator-herdr-protocol.ts";
@@ -12,7 +9,7 @@ const execFileAsync = promisify(execFile);
 type TailnetIdentity = { hostname: string; allowedLogins: string[] };
 type WorkerReply = { type: "ready"; url: string } | { type: "error"; message: string };
 
-/** A publication owns its foreground Serve process and private socket, not any global Serve configuration. */
+/** A publication owns its foreground Serve process and guarded loopback proxy, not global Serve configuration. */
 export interface PlannotatorTailnetPublication {
   url: string;
   stop: () => Promise<void>;
@@ -113,10 +110,9 @@ export function publishPlannotatorTailnet(
   });
 }
 
-/** The worker uses foreground Serve only; its private Unix path cannot be reused by unrelated TCP services. */
+/** The worker leases a guarded loopback HTTP proxy; ordinary operators never need privileged Unix-socket Serve. */
 async function runPlannotatorTailnetWorker(): Promise<void> {
   const abort = new AbortController();
-  let directory: string | undefined;
   let proxy: Awaited<ReturnType<typeof startPlannotatorTailnetProxy>> | undefined;
   let serve: ChildProcess | undefined;
   let serveExited: Promise<void> | undefined;
@@ -139,17 +135,16 @@ async function runPlannotatorTailnetWorker(): Promise<void> {
       if (plannotatorServePortIsFree(state, candidate)) { port = candidate; break; }
     }
     if (!port) throw new Error("no safe HTTPS port available in Tailscale Serve configuration.");
-    directory = await mkdtemp(join(tmpdir(), "pn-tailnet-"));
     if (abort.signal.aborted) throw new Error("publisher stopped during startup.");
-    const socketPath = join(directory, "review.sock");
     const publicOrigin = `https://${identity.hostname}:${port}`;
-    proxy = await startPlannotatorTailnetProxy({ socketPath, upstreamUrl, publicOrigin, allowedLogins: identity.allowedLogins });
+    proxy = await startPlannotatorTailnetProxy({ upstreamUrl, publicOrigin, allowedLogins: identity.allowedLogins });
     if (abort.signal.aborted) throw new Error("publisher stopped during startup.");
-    serve = spawn("tailscale", ["serve", "--bg=false", `--https=${port}`, `unix:${socketPath}`], { stdio: ["ignore", "pipe", "pipe"] });
+    serve = spawn("tailscale", ["serve", "--bg=false", `--https=${port}`, proxy.targetUrl], { stdio: ["ignore", "pipe", "pipe"] });
     serveExited = new Promise<void>((resolve) => { serve!.once("exit", () => resolve()); serve!.once("error", () => resolve()); });
     let output = "";
+    const safeOutput = () => output.replaceAll(new URL(proxy!.targetUrl).pathname, "/<private-proxy>");
     await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`Serve did not announce the review URL. ${output}`)), 10_000);
+      const timer = setTimeout(() => reject(new Error(`Serve did not announce the review URL. ${safeOutput()}`)), 10_000);
       const append = (chunk: Buffer) => {
         output = (output + chunk.toString()).slice(-3000);
         if (output.includes(publicOrigin)) { clearTimeout(timer); resolve(); }
@@ -159,8 +154,8 @@ async function runPlannotatorTailnetWorker(): Promise<void> {
       serve!.once("error", (error) => { clearTimeout(timer); reject(error); });
       serve!.once("exit", (code) => {
         clearTimeout(timer);
-        reject(new Error(`Serve exited (${code ?? "signal"}). ${output}`));
-        if (!stopping) { send({ type: "error", message: tailnetErrorMessage(output || "Serve stopped.") }); void stop(); }
+        reject(new Error(`Serve exited (${code ?? "signal"}). ${safeOutput()}`));
+        if (!stopping) { send({ type: "error", message: tailnetErrorMessage(safeOutput() || "Serve stopped.") }); void stop(); }
       });
     });
     if (!abort.signal.aborted) send({ type: "ready", url: publicOrigin });
@@ -178,7 +173,6 @@ async function runPlannotatorTailnetWorker(): Promise<void> {
       } else await serveExited;
       await starting?.catch(() => {});
       await proxy?.stop();
-      if (directory) await rm(directory, { recursive: true, force: true });
       if (process.connected) process.disconnect();
     })();
     return stopping;

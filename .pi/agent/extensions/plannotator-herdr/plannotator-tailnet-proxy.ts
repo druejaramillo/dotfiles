@@ -1,5 +1,6 @@
+import { randomBytes } from "node:crypto";
 import { createServer, request, type IncomingHttpHeaders, type IncomingMessage, type OutgoingHttpHeaders } from "node:http";
-import type { Socket } from "node:net";
+import type { AddressInfo, Socket } from "node:net";
 import { validatePlannotatorUrl } from "./plannotator-herdr-protocol.ts";
 
 const hopHeaders = new Set(["connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "transfer-encoding", "upgrade"]);
@@ -46,14 +47,25 @@ export function authorizePlannotatorTailnetRequest(req: Pick<IncomingMessage, "u
   return undefined;
 }
 
-/** Serve an identity-checked review proxy on a private Unix socket, never an exposed TCP port. */
+/** Ordinary Serve operators use loopback HTTP with a private backend path; Unix sockets remain available for local tests. */
 export async function startPlannotatorTailnetProxy(options: {
-  socketPath: string;
+  socketPath?: string;
   upstreamUrl: string;
   publicOrigin: string;
   allowedLogins: readonly string[];
-}): Promise<{ stop: () => Promise<void> }> {
+}): Promise<{ targetUrl: string; stop: () => Promise<void> }> {
   const upstream = new URL(validatePlannotatorUrl(options.upstreamUrl));
+  const backendPath = options.socketPath ? "" : `/pn-${randomBytes(24).toString("hex")}`;
+  function authorizeProxyRequest(req: IncomingMessage): number | undefined {
+    if (backendPath) {
+      const path = req.url ?? "";
+      if (path === backendPath) req.url = "/";
+      else if (path.startsWith(`${backendPath}/`)) req.url = path.slice(backendPath.length);
+      else if (path.startsWith(`${backendPath}?`)) req.url = `/${path.slice(backendPath.length)}`;
+      else return 403;
+    }
+    return authorizePlannotatorTailnetRequest(req, options.publicOrigin, options.allowedLogins);
+  }
   if (!options.allowedLogins.length) throw new Error("Plannotator tailnet proxy: no allowed Tailscale login.");
   const sockets = new Set<Socket>();
   function trackSocket(socket: Socket): void {
@@ -62,7 +74,7 @@ export async function startPlannotatorTailnetProxy(options: {
     socket.on("error", () => {});
   }
   const server = createServer((req, res) => {
-    const refused = authorizePlannotatorTailnetRequest(req, options.publicOrigin, options.allowedLogins);
+    const refused = authorizeProxyRequest(req);
     if (refused) { res.writeHead(refused, { "cache-control": "no-store" }); res.end("Plannotator tailnet: request refused.\n"); return; }
     const outgoing = request(new URL(req.url!, upstream), { method: req.method, headers: reviewProxyHeaders(req.headers, upstream) }, (response) => {
       res.writeHead(response.statusCode ?? 502, responseProxyHeaders(response.headers));
@@ -81,7 +93,7 @@ export async function startPlannotatorTailnetProxy(options: {
   server.requestTimeout = 0; // Reviews and Ask this session use long-lived SSE responses.
   server.on("connection", trackSocket);
   server.on("upgrade", (req, socket, head) => {
-    const refused = authorizePlannotatorTailnetRequest(req, options.publicOrigin, options.allowedLogins);
+    const refused = authorizeProxyRequest(req);
     if (refused || req.headers.upgrade?.toLowerCase() !== "websocket") {
       socket.end(`HTTP/1.1 ${refused ?? 400} Refused\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
       return;
@@ -107,9 +119,15 @@ export async function startPlannotatorTailnetProxy(options: {
     socket.once("close", () => outgoing.destroy());
     outgoing.end();
   });
-  await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(options.socketPath, resolve); });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    if (options.socketPath) server.listen(options.socketPath, resolve);
+    else server.listen(0, "127.0.0.1", resolve);
+  });
+  const targetUrl = options.socketPath ? `unix:${options.socketPath}` : `http://127.0.0.1:${(server.address() as AddressInfo).port}${backendPath}`;
   let stopping: Promise<void> | undefined;
   return {
+    targetUrl,
     stop() {
       stopping ??= new Promise<void>((resolve) => {
         server.close(() => resolve());

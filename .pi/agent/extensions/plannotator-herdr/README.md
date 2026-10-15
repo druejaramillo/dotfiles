@@ -36,7 +36,8 @@ Existing Plannotator plan, annotate, last-message, and code-review flows all use
 this opener. Browser-link publication is attempted for every review regardless
 of opening preference. The full HTTPS URL appears in the transcript and a
 widget while the review remains live. A publication failure does not close the
-review or prevent terminal opening.
+review or prevent terminal opening. Choosing Browser link does not automatically
+repeat a failed attempt; `/plannotator-open link` explicitly retries it.
 
 Reopen the **same live review**, without starting another review server:
 
@@ -102,9 +103,12 @@ than silently choosing another computer.
 On every **Pi host** where you want browser links:
 
 - Install/sign in to Tailscale; enable MagicDNS and tailnet HTTPS certificates.
-- Use a Tailscale version supporting `tailscale serve unix:/path/to/socket`.
-- Permit your OS user to run Serve and allow your reviewing devices through
+- Permit your OS user to run ordinary HTTP-proxy Serve and allow reviewing devices through
   the tailnet ACLs/grants for the dynamically allocated HTTPS ports.
+
+The publisher uses loopback HTTP, not a Unix-socket or filesystem Serve target.
+It does not invoke sudo. Recent Tailscale versions require additional privileges
+for Unix-socket targets; those privileges are not needed for this transport.
 
 By default, the proxy accepts only the Tailscale login that owns the Pi host.
 For tagged hosts (which have no owner), or an additional login you use, set an
@@ -122,7 +126,8 @@ choices; the extension does not enable them or approve setup prompts.
 ## Security and cleanup
 
 The real review server stays on loopback with a random port. The companion
-uses a private Unix-socket proxy and a per-review **foreground** Serve process:
+uses an identity-checked loopback HTTP proxy and a per-review **foreground**
+Serve process:
 
 ```text
 Pi host's loopback Plannotator server
@@ -134,15 +139,16 @@ Pi host's loopback Plannotator server
 The proxy rejects other identities, cross-origin requests, and native host-only
 control/polling endpoints. It strips forwarded identity and authorization
 headers before reaching Plannotator, while supporting streaming and WebSockets.
-It trusts Tailscale's injected identity headers only on its private Unix socket.
+Serve forwards through an unguessable backend path which is not in the public
+review URL. The loopback proxy requires that path as well as the expected Host,
+Origin, and Tailscale identity. Direct requests to its root are refused.
 
 Publication first checks Serve state for occupied ports. It never uses Funnel,
 `serve reset`, global `off`, `--yes`, or background Serve, and does not replace
 an Inbox or another service. Shutdown signals only its own foreground CLI.
-Even an unclean worker crash cannot expose an unrelated TCP service through a
-reused port: the route targets a unique private Unix socket.
-
-The worker's IPC connection is a lease: losing Pi closes its publication.
+The worker's IPC connection is a lease: losing Pi closes its publication and
+loopback listener. Cleanup is best effort if related processes are forcibly
+killed together.
 Completing a review removes its link and terminal request after three failed
 one-second listener probes. Renderer advertisements and terminal requests have
 15-second leases. Remote transport disconnects retain existing terminal tabs
@@ -155,8 +161,10 @@ print, and JSON modes retain their previous browser configuration.
 ## Diagnostics and development
 
 `/plannotator-open list` shows current links. `/plannotator-open link` retries
-failed publication. If no renderer appears, check relay `status`, saved SSH
-profiles, and logs under
+failed publication. If only Browser link appears, the updated renderer relay
+is not advertising on that Pi host. Restart the companion relay on the viewing
+computer (not Herdr itself), check that `status` reports `protocol: 2`, and
+check its saved SSH profiles and logs under
 `${XDG_STATE_HOME:-$HOME/.local/state}/plannotator-herdr/`.
 
 Development checks:
@@ -168,3 +176,14 @@ npm run check
 
 Tests use temporary review servers, Unix sockets, mocked Herdr APIs, and a fake
 Tailscale executable. They never change live Herdr layout or real Serve routes.
+
+For an opt-in real-network smoke test, run on a Pi host:
+
+```sh
+node scripts/plannotator-tailnet-smoke.ts --publish-probe
+```
+
+This temporarily publishes only a disposable marker, checks HTTPS and
+cross-origin rejection, stops its foreground Serve process, and verifies that
+the pre-existing Serve configuration is unchanged. It never reads review content
+or resets Serve. Normal tests do not run this script.
