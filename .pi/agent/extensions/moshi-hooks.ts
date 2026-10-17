@@ -92,7 +92,12 @@ interface TerminalContext {
   herdrWorkspace: string
   herdrTabId: string
   herdrTab: string
+  muxEnv: Record<string, string>
 }
+
+// Variables the daemon's mux drivers detect panes from; rendered by the
+// installer from internal/mux's registry.
+const muxEnvKeys: string[] = ["TERN_PANE","TERN_PANE_SOCKET","TERN_WINDOW_KEY","TUIOS_ENV","TUIOS_PANE_ID","TUIOS_SESSION","TUIOS_SOCKET","TUIOS_WINDOW_ID"]
 
 function runForOutput(command: string, args: string[], timeout: number): string {
   try {
@@ -142,7 +147,15 @@ function resolveTerminalContext(): TerminalContext {
   if (tmuxSession) terminalKind = "tmux"
   else if (process.env.HERDR_ENV === "1") terminalKind = "herdr"
   else if (process.env.ZELLIJ || zellijSession || zellijPane) terminalKind = "zellij"
+  // Mux-driver panes (tern, TUIOS, …) are detected daemon-side from these
+  // variables (internal/mux), so a new driver needs no change here.
+  const muxEnv: Record<string, string> = {}
+  for (const key of muxEnvKeys) {
+    const value = process.env[key]
+    if (value) muxEnv[key] = value
+  }
   return {
+    muxEnv,
     terminalKind,
     tmuxSession,
     tmuxWindow,
@@ -464,6 +477,7 @@ function baseEnvelope(payload: HookPayload, sessionId: string, eventName: string
     cwd: payload.cwd,
     projectName: projectNameForCwd(payload.cwd),
     terminalKind: terminalContext.terminalKind,
+    muxEnv: terminalContext.muxEnv,
     tmuxSession: terminalContext.tmuxSession,
     tmuxWindow: terminalContext.tmuxWindow,
     tmuxPane: terminalContext.tmuxPane,
