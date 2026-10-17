@@ -29,6 +29,7 @@
   "quietStartup": true,
   "enableInstallTelemetry": false,
   "defaultProjectTrust": "ask",
+  "defaultTools": ["+codemode"],
   "doubleEscapeAction": "tree",
   "treeFilterMode": "default",
   "modelThinkingLevels": {
