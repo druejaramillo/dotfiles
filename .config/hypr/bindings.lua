@@ -36,3 +36,11 @@ o.bind("switch:off:Lid Switch", nil, "hyprmon --profile laptop", { locked = true
 o.bind("SUPER + M", "Hypruler", { launch = "hypruler" })
 
 o.bind("ALT + SPACE", "Play/pause media", "omarchy-shell media playPause", { locked = true })
+
+-- strata-installer: file-manager start
+hl.unbind("SUPER + SHIFT + F")
+hl.unbind("SUPER + ALT + SHIFT + F")
+o.bind("SUPER + SHIFT + F", "File manager", { launch = "/home/drue/.local/bin/strata" })
+o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
+  "uwsm-app -- /home/drue/.local/bin/strata \"$(omarchy-cmd-terminal-cwd)\"")
+-- strata-installer: file-manager end

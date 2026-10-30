@@ -203,6 +203,23 @@ install_base_packages_linux() {
   esac
 }
 
+install_strata_arch_linux() {
+  if [[ -x "$HOME/.local/bin/strata" ]] || have strata; then
+    log "Strata already installed"
+    return
+  fi
+
+  ensure_local_bin_on_path
+  log "Installing Strata with its official installer"
+  curl -fsSL https://raw.githubusercontent.com/lgse/strata/main/install.sh |
+    bash -s -- --non-interactive
+
+  if [[ ! -x "$HOME/.local/bin/strata" ]]; then
+    err "Strata installation failed; expected $HOME/.local/bin/strata"
+    exit 1
+  fi
+}
+
 install_go_linux() {
   if have go; then
     return
@@ -886,6 +903,9 @@ main() {
     detect_linux_pkg_mgr
     update_system_packages_linux
     install_base_packages_linux
+    if [[ "$PKG_MGR" == "pacman" ]]; then
+      install_strata_arch_linux
+    fi
     install_go_linux
     install_starship_linux
     install_docker_linux
