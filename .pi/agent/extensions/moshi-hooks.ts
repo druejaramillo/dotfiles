@@ -13,7 +13,7 @@ import { closeSync, openSync, readFileSync, readSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 
 // Kept for debugging / manual replay through the CLI adapter above.
-const helperBinary = "/root/.local/bin/moshi-hook"
+const helperBinary = "/home/drue/.local/bin/moshi-hook"
 
 const agentSource = "pi"
 const agentDisplayName = "Pi"
@@ -41,26 +41,53 @@ function resolveSocketPath(): string {
 // (so the daemon does not log broken pipes), close. Every failure resolves
 // silently — hooks must never interrupt the user's Pi turn when
 // Moshi is absent.
+//
+// Envelopes go out one at a time, in order. The daemon handles connections
+// concurrently, so a resolution on its own connection could otherwise land
+// before the prompt it resolves. It writes session state first and acks
+// after its other work, so a connection still unacked after sendTimeoutMs is
+// let go: a stuck daemon cannot hold back the rest, and the few envelopes
+// queued at shutdown still drain within the second OMP waits for them.
 const inFlightSends = new Set<Promise<void>>()
+const sendTimeoutMs = 250
+let sendQueue: Promise<void> = Promise.resolve()
 
 function sendEnvelope(envelope: Record<string, unknown>): void {
-  try {
-    const sock = createConnection({ path: resolveSocketPath() })
-    const done = new Promise<void>((resolve) => sock.once("close", () => resolve()))
-    inFlightSends.add(done)
-    done.then(() => inFlightSends.delete(done))
-    sock.setNoDelay(true)
-    sock.on("error", () => {
-      try {
-        sock.destroy()
-      } catch {}
-    })
-    sock.once("connect", () => {
-      sock.write(JSON.stringify(envelope) + "\n")
-      sock.end()
-    })
-    sock.on("data", () => {})
-  } catch {}
+  const done = sendQueue.then(() => deliverEnvelope(envelope))
+  sendQueue = done
+  inFlightSends.add(done)
+  done.then(() => inFlightSends.delete(done))
+}
+
+function deliverEnvelope(envelope: Record<string, unknown>): Promise<void> {
+  return new Promise<void>((resolve) => {
+    try {
+      const sock = createConnection({ path: resolveSocketPath() })
+      const timer = setTimeout(() => {
+        try {
+          sock.destroy()
+        } catch {}
+        resolve()
+      }, sendTimeoutMs)
+      sock.once("close", () => {
+        clearTimeout(timer)
+        resolve()
+      })
+      sock.setNoDelay(true)
+      sock.on("error", () => {
+        try {
+          sock.destroy()
+        } catch {}
+      })
+      sock.once("connect", () => {
+        sock.write(JSON.stringify(envelope) + "\n")
+        sock.end()
+      })
+      sock.on("data", () => {})
+    } catch {
+      resolve()
+    }
+  })
 }
 
 // flushSends resolves once every queued envelope has reached the daemon (or
@@ -97,7 +124,7 @@ interface TerminalContext {
 
 // Variables the daemon's mux drivers detect panes from; rendered by the
 // installer from internal/mux's registry.
-const muxEnvKeys: string[] = ["TERN_PANE","TERN_PANE_SOCKET","TERN_WINDOW_KEY","TUIOS_ENV","TUIOS_PANE_ID","TUIOS_SESSION","TUIOS_SOCKET","TUIOS_WINDOW_ID"]
+const muxEnvKeys: string[] = ["REX_BLOCK","REX_SERVER","REX_SESSION","TERN_PANE","TERN_PANE_SOCKET","TERN_WINDOW_KEY","TUIOS_ENV","TUIOS_PANE_ID","TUIOS_SESSION","TUIOS_SOCKET","TUIOS_WINDOW_ID"]
 
 function runForOutput(command: string, args: string[], timeout: number): string {
   try {
@@ -556,6 +583,9 @@ function handleEvent(payload: HookPayload): void {
       // Pi owns the approval prompt and decision. Moshi mirrors
       // the waiting state; with a verified terminal target the daemon's TUI
       // bridge can send the user's remote decision into the native prompt.
+      // OMP subagents are headless: OMP settles their approvals itself and
+      // nothing is drawn in the inherited parent pane to answer.
+      if (isChild && agentSource === "omp") return
       const toolName = firstString(payload.tool_name)
       state.lastToolName = toolName
       const title = agentDisplayName + " needs approval"
@@ -595,13 +625,49 @@ function handleEvent(payload: HookPayload): void {
       sendEnvelope(envelope)
       return
     }
+    case "QuestionAsked": {
+      // The native Ask dialog is open. Its questions ride along as the Chat
+      // View card; without an action id no approval bar opens.
+      if (isChild) return
+      const questions = askQuestions(payload.tool_input)
+      if (questions.length === 0) return
+      const title = agentDisplayName + " has a question"
+      const prompt: Record<string, unknown> = { kind: "question", questions }
+      const toolUseId = firstString(payload.tool_use_id)
+      if (toolUseId) prompt.toolUseId = toolUseId
+      const envelope = baseEnvelope(payload, sessionId, "QuestionAsked")
+      envelope.category = "approval_required"
+      envelope.toolName = "ask"
+      envelope.title = title
+      envelope.subtitle = "Answer in terminal"
+      envelope.message = plainTextClip(firstString(questions[0].question), 256)
+      envelope.interactivePrompt = prompt
+      state.lastToolName = "ask"
+      state.lastEventTitle = title
+      sendEnvelope(envelope)
+      return
+    }
     case "PlanResolved":
       // Category-less: the daemon retires the plan card and publishes nothing.
       sendEnvelope(baseEnvelope(payload, sessionId, "PlanResolved"))
       return
+    case "QuestionResolved": {
+      // Category-less: the daemon retires this ask's card, and only it, and
+      // publishes nothing. Its toolUseId keeps a resolution handled before
+      // its question from leaving that question pending.
+      const envelope = baseEnvelope(payload, sessionId, "QuestionResolved")
+      const toolUseId = firstString(payload.tool_use_id)
+      if (toolUseId) envelope.interactivePrompt = { kind: "question", toolUseId }
+      sendEnvelope(envelope)
+      return
+    }
     case "PermissionResolved": {
+      if (isChild && agentSource === "omp") return
       const title = agentDisplayName + " resumed"
       const envelope = baseEnvelope(payload, sessionId, "PermissionResolved")
+      // The daemon closes the open approval card by its action id.
+      const actionId = firstString(payload.tool_use_id)
+      if (actionId) envelope.actionId = actionId
       envelope.category = "session_started"
       envelope.title = title
       envelope.message = formatUserPromptDetail(state.lastUserPrompt)
@@ -627,6 +693,44 @@ function handleEvent(payload: HookPayload): void {
     default:
       sendEnvelope(baseEnvelope(payload, sessionId, payload.hook_event_name))
   }
+}
+
+// askQuestions is the in-module port of interactivePromptQuestions in
+// internal/cli/hook_interactive_prompt.go, over OMP's ask arguments.
+function askQuestions(input: unknown): Array<Record<string, unknown>> {
+  const record = input && typeof input === "object" ? input as Record<string, unknown> : {}
+  const out: Array<Record<string, unknown>> = []
+  for (const item of Array.isArray(record.questions) ? record.questions : []) {
+    if (!item || typeof item !== "object") continue
+    const q = item as Record<string, unknown>
+    const question = firstString(q.question)
+    if (!question) continue
+    const options: Array<Record<string, unknown>> = []
+    let hasPreview = false
+    for (const option of Array.isArray(q.options) ? q.options : []) {
+      if (!option || typeof option !== "object") continue
+      const o = option as Record<string, unknown>
+      const label = firstString(o.label)
+      if (!label) continue
+      options.push({ label, description: firstString(o.description) })
+      if (firstString(o.preview)) hasPreview = true
+    }
+    const entry: Record<string, unknown> = {
+      header: firstString(q.header),
+      question,
+      multiSelect: q.multiSelect === true || q.multi_select === true || q.multi === true || q.multiple === true,
+      options,
+    }
+    if (hasPreview) entry.hasPreview = true
+    const id = firstString(q.id)
+    if (id) entry.id = id
+    const recommended = q.recommended
+    if (typeof recommended === "number" && Number.isInteger(recommended) && recommended >= 0 && recommended < options.length) {
+      entry.recommendedIndex = recommended
+    }
+    out.push(entry)
+  }
+  return out
 }
 
 // planFileOnDisk resolves OMP's plan path: local:// lives under the session's
