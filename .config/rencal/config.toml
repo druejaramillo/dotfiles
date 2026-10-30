@@ -1,6 +1,8 @@
 theme = "user:carbonfox"
 notifications_enabled = true
 auto_sync_enabled = true
+first_day_of_week = "sunday"
+show_week_numbers = false
 
 [groups]
 default = [
@@ -12,4 +14,6 @@ default = [
     "hra-events-calendar",
     "birthdays",
     "holidays-in-united-states",
+    "petra",
+    "calendar",
 ]
