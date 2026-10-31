@@ -36,8 +36,8 @@ Usage: bash dev-setup.sh [--server]
 
 Profiles:
   personal  Default. Installs the complete local development environment.
-  --server  Linux SSH development server. Skips Voxtype, its audio/input
-            dependencies, and local terminal fonts.
+  --server  Linux SSH development server. Skips Voxtype, Omarchy plugins,
+            desktop audio/input dependencies, brightness tools, and local fonts.
 EOF
 }
 
@@ -628,6 +628,77 @@ install_tpm() {
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 }
 
+# Restore plugin Git-link placeholders without changing the checked-out shell layout.
+install_omarchy_plugin() {
+  local id="$1" repo="$2"
+  local plugin_dir="$HOME/.config/omarchy/plugins/$id"
+
+  if [[ -L "$plugin_dir" ]]; then
+    err "Omarchy plugin path is a symlink; leaving it untouched: $plugin_dir"
+    return 1
+  fi
+
+  if [[ -f "$plugin_dir/manifest.json" ]]; then
+    log "Omarchy plugin already installed: $id"
+  else
+    # Bare dotfiles checkout creates empty Git-link directories, not plugin contents.
+    # Only remove empty placeholders; never discard a partial install or local edits.
+    if [[ -e "$plugin_dir" ]] && ! rmdir -- "$plugin_dir"; then
+      err "Omarchy plugin directory is not empty and has no manifest: $plugin_dir"
+      return 1
+    fi
+
+    log "Installing Omarchy plugin: $id"
+    # shell.json already enables/places these plugins. --enable would rewrite it.
+    if ! omarchy plugin add "$repo" --yes; then
+      # The CLI can fail on rescan IPC after successfully installing on a headless host.
+      if [[ ! -f "$plugin_dir/manifest.json" ]]; then
+        err "Omarchy plugin installation failed: $id"
+        return 1
+      fi
+      warn "Plugin files installed for $id, but shell rescan did not finish."
+    fi
+  fi
+
+  if [[ ! -f "$plugin_dir/manifest.json" ]] ||
+    [[ "$(jq -r '.id' "$plugin_dir/manifest.json")" != "$id" ]]; then
+    err "Omarchy plugin manifest does not match expected id: $id"
+    return 1
+  fi
+  omarchy plugin validate "$plugin_dir"
+}
+
+install_omarchy_plugins_linux() {
+  if [[ "$OS" != "linux" ]] || is_server || ! have omarchy; then
+    return
+  fi
+
+  ensure_local_bin_on_path
+  install_omarchy_plugin 37signals.hey https://github.com/basecamp/omarchy-hey-plugin.git
+  install_omarchy_plugin io.github.thisisgm.omapods https://github.com/thisisgm/omarchy-pods
+  install_omarchy_plugin org.ren.caldir https://github.com/t4t5/omarchy-caldir-widget
+  install_omarchy_plugin hass https://github.com/konradk/hass.git
+  install_omarchy_plugin jankeesvw.time-machine https://github.com/jankeesvw/omarchy-time-machine.git
+  # The custom lock screen is ordinary tracked source, not an external Git checkout.
+  omarchy plugin validate "$HOME/.config/omarchy/plugins/drue.lock"
+
+  log "Installing Omarchy plugin dependencies"
+  omarchy pkg add restic
+  if ! have caldir; then
+    curl -fsSL https://caldir.org/install.sh | sh
+  fi
+  caldir --version
+  if ! have hey; then
+    omarchy-mise-install github:basecamp/hey-cli hey
+  fi
+  hey --version
+  # Cloning omapods alone does not install its librepods daemon or user service.
+  bash "$HOME/.config/omarchy/plugins/io.github.thisisgm.omapods/setup"
+
+  omarchy-shell shell rescanPlugins >/dev/null 2>&1 ||
+    warn "Omarchy shell is not running; plugins will load on the next desktop login."
+}
+
 install_voxtype_linux() {
   ensure_local_bin_on_path
 
@@ -819,6 +890,7 @@ EOF
 Skipped for the server profile:
   - FiraCode Nerd Font and fontconfig
   - Voxtype, its Whisper model, ALSA development headers, and wtype
+  - Omarchy plugins and their desktop dependencies
   - wluma
 EOF
   else
@@ -829,6 +901,10 @@ Also installed:
 EOF
     if [[ "$OS" == "linux" ]]; then
       printf '%s\n' '  - Voxtype (Linux)'
+      if have omarchy; then
+        printf '%s\n' '  - Omarchy plugins: HEY, AirPods/librepods, Caldir, Home Assistant, Time Machine'
+        printf '%s\n' '    Connect HEY/calendar accounts and configure backup destinations separately.'
+      fi
       if have wluma; then
         printf '%s\n' '  - wluma (Linux)'
       fi
@@ -940,6 +1016,9 @@ main() {
   install_try_cli
   install_skills_cli
   clone_dotfiles
+  if [[ "$OS" == "linux" ]] && ! is_server; then
+    install_omarchy_plugins_linux
+  fi
   change_default_shell_to_zsh
   setup_postgres
   print_summary
