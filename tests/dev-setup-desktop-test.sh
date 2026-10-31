@@ -148,6 +148,67 @@ test_plugin_profile_gates() {
   [[ ! -s "$COMMAND_LOG" ]]
 }
 
+test_parakeet_build_and_config_preservation() {
+  VOXTYPE_DIR="$HOME/src/voxtype"
+  mkdir -p "$VOXTYPE_DIR/.git" "$VOXTYPE_DIR/target/release" "$HOME/.config/voxtype" "$HOME/.config/systemd/user"
+  printf '[package]\nname="voxtype"\n' >"$VOXTYPE_DIR/Cargo.toml"
+  cp "$(dirname "$SETUP_SCRIPT")/.config/systemd/user/voxtype.service" "$HOME/.config/systemd/user/voxtype.service"
+  grep -Fxq 'ExecStart=%h/.local/bin/voxtype daemon' "$HOME/.config/systemd/user/voxtype.service"
+  printf 'engine = "parakeet"\n# preserve this exact file\n' >"$HOME/.config/voxtype/config.toml"
+  cp "$HOME/.config/voxtype/config.toml" "$HOME/expected-config.toml"
+  local binary
+  for binary in voxtype voxtype-osd voxtype-osd-quickshell voxtype-audio-bridge; do
+    printf '#!/bin/bash\nprintf "voxtype %%s config=%%s\\n" "$*" "${XDG_CONFIG_HOME:-}" >>"$COMMAND_LOG"\n' >"$VOXTYPE_DIR/target/release/$binary"
+    chmod +x "$VOXTYPE_DIR/target/release/$binary"
+  done
+  git() {
+    printf 'git %s\n' "$*" >>"$COMMAND_LOG"
+    if [[ "$*" == *'rev-parse HEAD'* ]]; then printf '%s\n' "$VOXTYPE_REV"; fi
+  }
+  cargo() { printf 'cargo CC=%s CXX=%s %s\n' "${CC:-}" "${CXX:-}" "$*" >>"$COMMAND_LOG"; }
+  systemctl() { printf 'systemctl %s\n' "$*" >>"$COMMAND_LOG"; }
+  install_voxtype_linux
+  cmp "$HOME/expected-config.toml" "$HOME/.config/voxtype/config.toml"
+  assert_log_contains "checkout --detach $VOXTYPE_REV"
+  assert_log_contains 'cargo CC=clang CXX=clang++ build --release --locked --features parakeet'
+  local download_config_dir
+  download_config_dir="$(grep -F 'setup --download --model parakeet-tdt-0.6b-v3 --no-post-install config=' "$COMMAND_LOG")"
+  download_config_dir="${download_config_dir##* config=}"
+  [[ "$download_config_dir" == /* && "$download_config_dir" != "$HOME/.config" ]]
+  [[ ! -e "$download_config_dir" ]]
+  assert_log_contains 'setup quickshell --source'
+  assert_log_contains 'systemctl --user restart voxtype.service'
+  [[ -x "$HOME/.local/bin/voxtype-osd" ]]
+  [[ -x "$HOME/.local/bin/voxtype-osd-quickshell" ]]
+  [[ -x "$HOME/.local/bin/voxtype-audio-bridge" ]]
+}
+
+test_main_desktop_order_and_server_gates() {
+  local function_name
+  for function_name in detect_linux_pkg_mgr update_system_packages_linux install_base_packages_linux \
+    install_strata_arch_linux install_go_linux install_starship_linux install_docker_linux \
+    install_lazygit_linux install_lazydocker_linux install_firacode_nerd_font_linux setup_fd_symlink \
+    install_tailscale install_oh_my_zsh install_nvm_node install_rust install_adaptive_brightness \
+    install_hypruler_linux install_tree_sitter_cli install_pi install_plannotator install_tpm \
+    install_voxtype_linux install_omarchy_plugins_linux install_try_cli install_skills_cli \
+    clone_dotfiles change_default_shell_to_zsh setup_postgres print_summary; do
+    eval "$function_name() { printf '%s\\n' '$function_name' >>\"\$COMMAND_LOG\"; }"
+  done
+  detect_os() {
+    OS="linux"
+    PKG_MGR="pacman"
+  }
+  main
+  local checkout_line voxtype_line plugins_line
+  checkout_line="$(grep -n '^clone_dotfiles$' "$COMMAND_LOG" | cut -d: -f1)"
+  voxtype_line="$(grep -n '^install_voxtype_linux$' "$COMMAND_LOG" | cut -d: -f1)"
+  plugins_line="$(grep -n '^install_omarchy_plugins_linux$' "$COMMAND_LOG" | cut -d: -f1)"
+  [[ "$checkout_line" -lt "$voxtype_line" && "$checkout_line" -lt "$plugins_line" ]]
+  : >"$COMMAND_LOG"
+  main --server
+  ! grep -Eq '^install_(voxtype|omarchy_plugins)_linux$' "$COMMAND_LOG"
+}
+
 run_desktop_test empty-placeholder test_empty_plugin_placeholder
 run_desktop_test existing-plugin test_existing_plugin_is_preserved
 run_desktop_test nonempty-placeholder test_nonempty_plugin_is_not_deleted
@@ -156,3 +217,5 @@ run_desktop_test wrong-plugin-id test_plugin_manifest_id_is_checked
 run_desktop_test headless-plugin-add test_headless_plugin_add
 run_desktop_test configured-plugins test_all_configured_plugins
 run_desktop_test plugin-profile-gates test_plugin_profile_gates
+run_desktop_test parakeet-build test_parakeet_build_and_config_preservation
+run_desktop_test main-order test_main_desktop_order_and_server_gates

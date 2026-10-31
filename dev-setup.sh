@@ -9,6 +9,8 @@ DOTFILES_DIR="$HOME/.dotfiles"
 DOTFILES_BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
 NVM_VERSION="v0.40.4"
 VOXTYPE_REPO="https://github.com/peteonrails/voxtype.git"
+VOXTYPE_REV="f97276661d9b723aa3236f03879650a2a06c3ec3"
+VOXTYPE_MODEL="parakeet-tdt-0.6b-v3"
 VOXTYPE_DIR="$HOME/.local/src/voxtype"
 HYPRULER_REPO="https://github.com/t4t5/hypruler.git"
 HYPRULER_DIR="$HOME/.local/src/hypruler"
@@ -106,6 +108,7 @@ sudo_if_needed() {
 }
 
 ensure_local_bin_on_path() {
+  mkdir -p "$HOME/.local/bin"
   append_line_if_missing 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.zshrc"
   export PATH="$HOME/.local/bin:$PATH"
 }
@@ -195,7 +198,7 @@ install_base_packages_linux() {
       zsh git curl wget unzip tar xz ca-certificates gpg2 \
       gcc gcc-c++ make ripgrep neovim python3 python3-pip \
       postgresql postgresql-server luarocks fd fzf ruby tmux \
-      cmake clang libclang-devel pkg-config
+      cmake clang libclang-devel pkg-config libopenssl-devel
     if ! is_server; then
       sudo_if_needed zypper install -y fontconfig alsa-devel wtype
     fi
@@ -703,9 +706,9 @@ install_voxtype_linux() {
   ensure_local_bin_on_path
 
   if [[ -d "$VOXTYPE_DIR" ]]; then
-    if [[ ! -f "$VOXTYPE_DIR/Cargo.toml" ]]; then
-      err "Voxtype directory exists but is not a Rust project: $VOXTYPE_DIR"
-      exit 1
+    if [[ ! -f "$VOXTYPE_DIR/Cargo.toml" || ! -d "$VOXTYPE_DIR/.git" ]]; then
+      err "Voxtype directory exists but is not a Rust Git checkout: $VOXTYPE_DIR"
+      return 1
     fi
   else
     log "Cloning Voxtype"
@@ -713,15 +716,50 @@ install_voxtype_linux() {
     git clone "$VOXTYPE_REPO" "$VOXTYPE_DIR"
   fi
 
+  if [[ -n "$(git -C "$VOXTYPE_DIR" status --porcelain)" ]]; then
+    err "Voxtype checkout has local changes; refusing to replace them: $VOXTYPE_DIR"
+    return 1
+  fi
+  if ! git -C "$VOXTYPE_DIR" cat-file -e "$VOXTYPE_REV^{commit}"; then
+    git -C "$VOXTYPE_DIR" fetch origin "$VOXTYPE_REV"
+  fi
+  git -C "$VOXTYPE_DIR" checkout --detach "$VOXTYPE_REV"
+
   # whisper.cpp triggers an internal compiler error in GCC 16 at -O3.
-  log "Building Voxtype with Clang"
-  # Remove any CMake cache created by a prior GCC build before switching compilers.
+  # CPU Parakeet works across machines without CUDA/MIGraphX runtime dependencies.
+  log "Building Voxtype with Clang and Parakeet support ($VOXTYPE_REV)"
   cargo clean --release --manifest-path "$VOXTYPE_DIR/Cargo.toml" -p whisper-rs-sys
-  CC=clang CXX=clang++ cargo build --release --manifest-path "$VOXTYPE_DIR/Cargo.toml"
+  CC=clang CXX=clang++ cargo build --release --locked --features parakeet --manifest-path "$VOXTYPE_DIR/Cargo.toml"
   install -m 0755 "$VOXTYPE_DIR/target/release/voxtype" "$HOME/.local/bin/voxtype"
 
-  log "Downloading Voxtype Whisper model"
-  "$HOME/.local/bin/voxtype" setup --download
+  if have omarchy; then
+    local binary
+    for binary in voxtype-osd voxtype-osd-quickshell voxtype-audio-bridge; do
+      install -m 0755 "$VOXTYPE_DIR/target/release/$binary" "$HOME/.local/bin/$binary"
+    done
+    "$HOME/.local/bin/voxtype" setup quickshell --source "$VOXTYPE_DIR/quickshell" --skip-bridge --force
+  fi
+
+  log "Downloading Voxtype Parakeet model: $VOXTYPE_MODEL"
+  # Upstream setup rewrites config when selecting a model. Isolate those writes,
+  # but leave XDG_DATA_HOME unchanged so the model goes to the real data directory.
+  local setup_config_dir
+  setup_config_dir="$(mktemp -d)"
+  if ! XDG_CONFIG_HOME="$setup_config_dir" "$HOME/.local/bin/voxtype" setup \
+    --download --model "$VOXTYPE_MODEL" --no-post-install; then
+    rm -rf "$setup_config_dir"
+    return 1
+  fi
+  rm -rf "$setup_config_dir"
+
+  if have systemctl; then
+    if systemctl --user daemon-reload; then
+      systemctl --user enable voxtype.service
+      systemctl --user restart voxtype.service
+    else
+      warn "No systemd user session; start voxtype.service after desktop login."
+    fi
+  fi
 }
 
 install_try_cli() {
@@ -889,7 +927,7 @@ EOF
 
 Skipped for the server profile:
   - FiraCode Nerd Font and fontconfig
-  - Voxtype, its Whisper model, ALSA development headers, and wtype
+  - Voxtype, its Parakeet model, ALSA development headers, and wtype
   - Omarchy plugins and their desktop dependencies
   - wluma
 EOF
@@ -900,7 +938,7 @@ Also installed:
   - FiraCode Nerd Font
 EOF
     if [[ "$OS" == "linux" ]]; then
-      printf '%s\n' '  - Voxtype (Linux)'
+      printf '%s\n' '  - Voxtype with CPU Parakeet (Linux)'
       if have omarchy; then
         printf '%s\n' '  - Omarchy plugins: HEY, AirPods/librepods, Caldir, Home Assistant, Time Machine'
         printf '%s\n' '    Connect HEY/calendar accounts and configure backup destinations separately.'
@@ -1010,13 +1048,11 @@ main() {
   install_pi
   install_plannotator
   install_tpm
-  if [[ "$OS" == "linux" ]] && ! is_server; then
-    install_voxtype_linux
-  fi
   install_try_cli
   install_skills_cli
   clone_dotfiles
   if [[ "$OS" == "linux" ]] && ! is_server; then
+    install_voxtype_linux
     install_omarchy_plugins_linux
   fi
   change_default_shell_to_zsh
