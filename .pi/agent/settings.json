@@ -1,6 +1,9 @@
 {
   "lastChangelogVersion": "1.4.0",
   "theme": "carbonfox",
+  "extensions": [
+    "-extensions/omarchy-system-theme.ts"
+  ],
   "packages": [
     "npm:@plannotator/pi-extension",
     "npm:@nicknisi/pi-cloak",
