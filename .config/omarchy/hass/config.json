@@ -23,8 +23,33 @@
     "cover.garage_door",
     "lock.garage_side_door"
   ],
+  "roomReadings": [],
+  "demoRoomReadings": [],
+  "pinnedRoomReadings": [],
+  "demoPinnedRoomReadings": [],
+  "panelOrder": [
+    "light.living_room_lights",
+    "light.bedroom_lights",
+    "script.shower_time",
+    "script.set_joules_climate",
+    "light.cync_indoor_light_strip_16ft",
+    "switch.cync_indoor_plug"
+  ],
+  "demoPanelOrder": [
+    "light.living_room_lamp",
+    "fan.living_room_ceiling_fan",
+    "climate.living_room_thermostat",
+    "media_player.living_room_tv",
+    "scene.living_room_movie_night",
+    "light.kitchen_pendant",
+    "switch.kitchen_coffee_maker",
+    "sensor.kitchen_temperature",
+    "cover.garage_door",
+    "lock.garage_side_door"
+  ],
   "groupByArea": true,
   "showEntityIcons": true,
+  "showPanelPinOnHover": false,
   "selectedTab": "favorites",
   "displayNameOverrides": {},
   "iconOverrides": {}
