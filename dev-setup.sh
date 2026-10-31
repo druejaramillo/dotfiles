@@ -780,6 +780,60 @@ install_try_cli() {
   fi
 }
 
+install_caldir() {
+  if have caldir || [[ -x "$HOME/.local/bin/caldir" ]]; then
+    log "caldir already installed"
+    return
+  fi
+
+  ensure_local_bin_on_path
+  log "Installing caldir and its default providers"
+  curl -fsSL https://caldir.org/install.sh | sh
+}
+
+install_rencal() {
+  if have rencal || [[ -x "$HOME/.local/bin/rencal" ]]; then
+    log "renCal already installed"
+    return
+  fi
+
+  if [[ "$OS" == "macos" ]]; then
+    log "Installing renCal with Homebrew"
+    brew install --cask rencal
+    return
+  fi
+
+  if [[ "$PKG_MGR" == "pacman" ]]; then
+    if ! have yay; then
+      warn "Skipping renCal: yay is not installed"
+      return
+    fi
+
+    log "Installing renCal from the AUR"
+    yay -S --needed --noconfirm rencal-bin
+    return
+  fi
+
+  local version arch appimage
+  version="$(curl -fsSL https://api.github.com/repos/t4t5/rencal/releases/latest | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')"
+
+  case "$(uname -m)" in
+  x86_64 | amd64) arch="amd64" ;;
+  arm64 | aarch64) arch="aarch64" ;;
+  *)
+    err "Unsupported architecture for renCal: $(uname -m)"
+    exit 1
+    ;;
+  esac
+
+  ensure_local_bin_on_path
+  appimage="$HOME/.local/bin/rencal"
+  log "Installing renCal AppImage ${version}"
+  curl -fsSL -o "$appimage" \
+    "https://github.com/t4t5/rencal/releases/download/v${version}/renCal_${version}_${arch}.AppImage"
+  chmod 755 "$appimage"
+}
+
 install_skills_cli() {
   if ! have go; then
     err "Go is required to install skills-cli"
@@ -926,6 +980,7 @@ EOF
     cat <<'EOF'
 
 Skipped for the server profile:
+  - caldir and renCal
   - FiraCode Nerd Font and fontconfig
   - Voxtype, its Parakeet model, ALSA development headers, and wtype
   - Omarchy plugins and their desktop dependencies
@@ -938,6 +993,9 @@ Also installed:
   - FiraCode Nerd Font
 EOF
     if [[ "$OS" == "linux" ]]; then
+      if have rencal || [[ -x "$HOME/.local/bin/rencal" ]]; then
+        printf '%s\n' '  - renCal desktop calendar'
+      fi
       printf '%s\n' '  - Voxtype with CPU Parakeet (Linux)'
       if have omarchy; then
         printf '%s\n' '  - Omarchy plugins: HEY, AirPods/librepods, Caldir, Home Assistant, Time Machine'
@@ -953,8 +1011,11 @@ EOF
           printf '%s\n' '  - Hypruler (source)'
         fi
       fi
-    elif [[ -d "/Applications/Lumen.app" ]]; then
-      printf '%s\n' '  - Lumen (macOS)'
+    else
+      printf '%s\n' '  - renCal desktop calendar'
+      if [[ -d "/Applications/Lumen.app" ]]; then
+        printf '%s\n' '  - Lumen (macOS)'
+      fi
     fi
   fi
 
@@ -987,6 +1048,8 @@ Recommended next steps:
        ruby --version
        try --version
        skills --version || true
+       caldir --version || true
+       rencal --version || true
        node --version
        npm --version
        tailscale version || true
@@ -1050,6 +1113,10 @@ main() {
   install_tpm
   install_try_cli
   install_skills_cli
+  if ! is_server; then
+    install_caldir
+    install_rencal
+  fi
   clone_dotfiles
   if [[ "$OS" == "linux" ]] && ! is_server; then
     install_voxtype_linux
