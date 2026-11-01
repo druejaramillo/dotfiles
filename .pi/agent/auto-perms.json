@@ -121,6 +121,7 @@
     "web_screenshot": "allow",
     "image_generate": "allow",
     "video_generate": "allow",
+    "plannotator_inbox": "allow",
     "external_directory": {
       "*": "ask",
       "/tmp/*": "allow"
