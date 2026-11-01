@@ -168,6 +168,7 @@ install_base_packages_linux() {
       libyaml-dev libffi-dev libgdbm-dev luarocks fd-find fzf ruby tmux \
       cmake clang libclang-dev
     if ! is_server; then
+      sudo_if_needed "$PKG_MGR" install -y restic
       sudo_if_needed "$PKG_MGR" install -y fontconfig libasound2-dev wtype
     fi
     ;;
@@ -180,6 +181,7 @@ install_base_packages_linux() {
       libyaml-devel libffi-devel gdbm-devel luarocks fd-find fzf ruby tmux \
       cmake clang-devel
     if ! is_server; then
+      sudo_if_needed dnf install -y restic
       sudo_if_needed dnf install -y fontconfig alsa-lib-devel wtype
     fi
     ;;
@@ -190,6 +192,7 @@ install_base_packages_linux() {
       postgresql luarocks fd fzf ruby tmux \
       clang cmake pkgconf
     if ! is_server; then
+      sudo_if_needed pacman -S --needed --noconfirm restic
       sudo_if_needed pacman -S --noconfirm fontconfig alsa-lib wtype
     fi
     ;;
@@ -200,6 +203,7 @@ install_base_packages_linux() {
       postgresql postgresql-server luarocks fd fzf ruby tmux \
       cmake clang libclang-devel pkg-config libopenssl-devel
     if ! is_server; then
+      sudo_if_needed zypper install -y restic
       sudo_if_needed zypper install -y fontconfig alsa-devel wtype
     fi
     ;;
@@ -487,7 +491,7 @@ install_base_packages_macos() {
 
   brew install \
     zsh git starship lazygit lazydocker ripgrep neovim python go \
-    postgresql@16 luarocks fd fzf ruby tmux
+    postgresql@16 luarocks fd fzf ruby tmux restic
 
   if ! have docker; then
     brew install --cask docker

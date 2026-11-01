@@ -1,5 +1,13 @@
 {
   "source": "~",
+  "exclude_file": "/home/drue/.config/omarchy-time-machine/excludes.txt",
+  "excludes": [
+    "/home/drue/.config/HEY/Cache",
+    "/home/drue/.config/HEY/Code Cache",
+    "/home/drue/.config/HEY/GPUCache",
+    "/home/drue/.local/share/Trash",
+    "/home/drue/.local/state/omarchy-time-machine/quarantine"
+  ],
   "retention": {
     "daily": 7,
     "weekly": 4,
@@ -11,7 +19,17 @@
       "name": "backup-ssd",
       "display_name": "SanDisk SSD Backup",
       "repository": "/run/media/drue/BACKUP/backup/restic",
-      "password_file": "/home/drue/.config/omarchy-time-machine/backup-ssd.key"
+      "password_file": "/home/drue/.config/omarchy-time-machine/backup-ssd.key",
+      "schedule": "*-*-* 03:00:00",
+      "randomized_delay": "0"
+    },
+    {
+      "name": "backup-hdd",
+      "display_name": "Western Digital HDD Backup",
+      "repository": "/run/media/drue/BACKUP-HDD/backup/restic",
+      "password_file": "/home/drue/.config/omarchy-time-machine/backup-hdd.key",
+      "schedule": "*-*-* 03:00:00",
+      "randomized_delay": "0"
     }
   ]
 }
