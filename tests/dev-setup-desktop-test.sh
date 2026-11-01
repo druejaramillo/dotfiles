@@ -190,7 +190,7 @@ test_main_desktop_order_and_server_gates() {
     install_lazygit_linux install_lazydocker_linux install_firacode_nerd_font_linux setup_fd_symlink \
     install_tailscale install_oh_my_zsh install_nvm_node install_rust install_adaptive_brightness \
     install_hypruler_linux install_tree_sitter_cli install_pi install_plannotator install_tpm \
-    install_voxtype_linux install_omarchy_plugins_linux install_try_cli install_skills_cli \
+    install_voxtype_linux install_omarchy_plugins_linux install_try_cli \
     clone_dotfiles change_default_shell_to_zsh setup_postgres print_summary; do
     eval "$function_name() { printf '%s\\n' '$function_name' >>\"\$COMMAND_LOG\"; }"
   done

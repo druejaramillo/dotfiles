@@ -35,7 +35,7 @@ Two scripts handle everything on a fresh machine.
 bash dev-setup.sh
 ```
 
-The default personal profile installs the complete local development environment, including Voxtype, FiraCode Nerd Font, Hypruler, and wluma (Linux), or Lumen (macOS). It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up any conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
+The default personal profile installs the shared development tools and desktop extras: FiraCode Nerd Font, caldir, and renCal on both platforms; Voxtype with its Parakeet model and Hypruler on Linux; plus wluma on Linux or Lumen on macOS. On Omarchy Linux it also installs the configured Omarchy plugins and their dependencies. It then clones this dotfiles repo as a bare repo to `~/.dotfiles` and checks out all tracked files into `$HOME`, backing up conflicts to `~/.dotfiles-backup-<timestamp>/`. Finally it sets zsh as the default shell.
 
 For a Linux server accessed over SSH, use the server profile:
 
@@ -43,7 +43,7 @@ For a Linux server accessed over SSH, use the server profile:
 bash dev-setup.sh --server
 ```
 
-It retains the development and terminal tooling (including tmux/TPM, skills-cli, and Plannotator), Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips FiraCode Nerd Font and `fontconfig`, plus Voxtype, its Whisper model, its audio/input dependencies (`libasound2-dev`/ALSA development headers and `wtype`), Hypruler, and adaptive brightness (`wluma`). The `--server` profile is Linux-only; macOS continues to use the default profile.
+It installs the shared development and terminal tools (including tmux/TPM, Pi, and Plannotator), Docker, PostgreSQL, Tailscale, and the complete dotfiles checkout. It skips desktop-only items: caldir and renCal, FiraCode Nerd Font and `fontconfig`, Voxtype and its Parakeet model, Voxtype's audio/input dependencies (ALSA development headers and `wtype`), Hypruler, Omarchy plugins, and wluma. The `--server` profile is Linux-only; macOS uses the personal profile.
 
 > **Note:** nvm and node will not be available until you start a new shell after the script finishes.
 
@@ -161,38 +161,35 @@ dotfiles push
 
 ---
 
-## What dev-setup.sh installs
+## What `dev-setup.sh` installs
 
-| Tool | Purpose | Profile |
-|------|---------|---------|
-| zsh + Oh My Zsh | Shell | Both |
-| Starship | Shell prompt | Both |
+| Tool | Purpose | Profile / platform |
+|------|---------|--------------------|
+| zsh + Oh My Zsh + Starship | Shell and prompt | Both |
 | git | Version control | Both |
-| Go | Go toolchain | Both |
-| Rust (rustup) | Rust toolchain | Both |
-| C compiler, CMake, Clang, pkg-config | Native build tools | Both |
+| Go + Rust (rustup) | Development toolchains | Both |
+| C/C++ build tools, CMake, Clang, pkg-config | Native builds | Linux |
 | Docker + lazydocker | Containers | Both |
 | PostgreSQL | Database | Both |
 | Tailscale | Private networking | Both |
+| restic | Backups | Personal |
 | lazygit | Terminal Git UI | Both |
 | nvm + Node.js (LTS) + npm | Node version management | Both |
-| tree-sitter-cli | Syntax parsing (neovim) | Both |
+| tree-sitter-cli | Syntax parsing for Neovim | Both |
 | neovim | Editor | Both |
-| ripgrep | Fast grep | Both |
-| fd | Fast find | Both |
-| fzf | Fuzzy finder | Both |
+| ripgrep, fd, fzf | Search and navigation | Both |
 | tmux + Tmux Plugin Manager | Terminal multiplexer | Both |
-| Ruby + try-cli | Try workspace manager | Both |
-| skills-cli | Agent skills CLI | Both |
+| Ruby + try-cli | Temporary workspaces | Both |
 | luarocks | Lua package manager | Both |
 | Python 3 | Scripting | Both |
-| Plannotator | AI plan review | Both |
-| Dotfiles bare checkout | Config files into `$HOME` | Both |
-| Default shell → zsh | Login shell | Both |
-| FiraCode Nerd Font (+ fontconfig on Linux) | Terminal font | Personal |
-| Voxtype + Whisper model | Local voice dictation | Personal Linux |
-| ALSA dev headers + wtype | Voxtype audio/input deps | Personal Linux |
+| Pi + Plannotator | AI coding agent and plan review | Both |
+| Dotfiles bare checkout; default shell → zsh | Config files and login shell | Both |
+| Strata | Terminal workspace tool | Arch Linux |
+| FiraCode Nerd Font | Terminal font | Personal |
+| caldir + renCal | Calendar tools | Personal |
+| Voxtype + Parakeet model; ALSA headers + `wtype` | Local voice dictation | Personal Linux |
 | Hypruler | Hyprland window rules helper | Personal Linux |
+| Omarchy plugins and dependencies | Desktop integrations (HEY, AirPods/librepods, Caldir, Home Assistant, Time Machine) | Personal Omarchy Linux |
 | wluma (Linux) / Lumen (macOS) | Adaptive brightness | Personal |
 
 ---
