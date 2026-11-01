@@ -30,6 +30,10 @@ hl.device({
   name = "adv360-pro-keyboard",
   kb_options = "",
 })
+hl.device({
+  name = "drue's-keyboard",
+  kb_options = "caps:escape_shifted_capslock",
+})
 
 -- Omarchy still supplies the legacy terminal and Ghostty scroll rules.
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
