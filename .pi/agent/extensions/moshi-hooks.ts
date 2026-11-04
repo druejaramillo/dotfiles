@@ -124,7 +124,7 @@ interface TerminalContext {
 
 // Variables the daemon's mux drivers detect panes from; rendered by the
 // installer from internal/mux's registry.
-const muxEnvKeys: string[] = ["REX_BLOCK","REX_SERVER","REX_SESSION","TERN_PANE","TERN_PANE_SOCKET","TERN_WINDOW_KEY","TUIOS_ENV","TUIOS_PANE_ID","TUIOS_SESSION","TUIOS_SOCKET","TUIOS_WINDOW_ID"]
+const muxEnvKeys: string[] = ["HC_SESSION","HC_TERMINAL_ID","HC_TERMINAL_SOCKET","REX_BLOCK","REX_SERVER","REX_SESSION","TERN_PANE","TERN_PANE_SOCKET","TERN_WINDOW_KEY","TUIOS_ENV","TUIOS_PANE_ID","TUIOS_SESSION","TUIOS_SOCKET","TUIOS_WINDOW_ID"]
 
 function runForOutput(command: string, args: string[], timeout: number): string {
   try {
@@ -243,6 +243,13 @@ function textFromMessage(value: unknown): string {
     textFromContent((message.message as Record<string, unknown> | undefined)?.content),
     textFromContent((message.entry as Record<string, unknown> | undefined)?.content),
   )
+}
+
+// stopError is why a turn failed: Pi records a provider refusal ("Provider
+// finish_reason: content_filter") or a network error as stopReason "error"
+// with an errorMessage, usually with no text at all.
+function stopError(message: Record<string, unknown>): string {
+  return message.stopReason === "error" ? firstString(message.errorMessage) : ""
 }
 
 function modelLabel(model: unknown): string {
@@ -680,8 +687,12 @@ function handleEvent(payload: HookPayload): void {
     case "TurnEnd": {
       if (isChild) return
       const assistant = firstString(payload.last_assistant_message)
-      if (!recordTaskCompletion(state, plainTextClip(assistant, 200), nowSeconds())) return
-      const title = plainTextClip(assistant, 80) || agentDisplayName + " complete"
+      // A failed turn's notification says why it stopped. The reason is not
+      // markdown: stripping would eat finish_reason's underscores.
+      const failure = firstString(payload.stop_error).replace(mdWhitespace, " ").trim()
+      const summary = (n: number) => failure ? truncateText(failure, n) : plainTextClip(assistant, n)
+      if (!recordTaskCompletion(state, summary(200), nowSeconds())) return
+      const title = summary(80) || agentDisplayName + " complete"
       const envelope = baseEnvelope(payload, sessionId, payload.hook_event_name)
       envelope.category = "task_complete"
       envelope.title = title
@@ -771,9 +782,21 @@ function agentKind(ctx: Record<string, unknown>): string {
   return firstString(agent.kind)
 }
 
+// Pi and OmO subagent extensions (pi-subagents and the like) run each
+// subagent as a headless child process (pi --mode json -p) that inherits the
+// parent's pane environment and loads this extension too. Only the terminal
+// UI owns a pane: a headless session announcing itself would repoint the
+// parent's pane, and its Chat View, at the subagent.
+function sessionIsHeadless(ctx: Record<string, unknown>): boolean {
+  if (agentSource !== "pi" && agentSource !== "omo") return false
+  if (typeof ctx.mode === "string") return ctx.mode !== "tui"
+  return ctx.hasUI === false
+}
+
 function send(eventName: string, event: unknown, ctx: unknown, extra: Record<string, unknown> = {}) {
   const eventObj = event && typeof event === "object" ? event as Record<string, unknown> : {}
   const ctxObj = ctx && typeof ctx === "object" ? ctx as Record<string, unknown> : {}
+  if (sessionIsHeadless(ctxObj)) return
   const payload: HookPayload = {
     hook_event_name: eventName,
     session_id: sessionID(eventObj, ctxObj),
@@ -808,6 +831,7 @@ export default function moshiPiHook(pi: ExtensionAPI): void {
   })
 
   let lastAssistantMessage = ""
+  let lastStopError = ""
 
   pi.on("agent_end", (event) => {
     const messages = Array.isArray(event.messages) ? event.messages : []
@@ -815,14 +839,16 @@ export default function moshiPiHook(pi: ExtensionAPI): void {
       const message = messages[index] as Record<string, unknown>
       if (message?.role === "assistant") {
         lastAssistantMessage = textFromMessage(message)
+        lastStopError = stopError(message)
         break
       }
     }
   })
 
   pi.on("agent_settled", (event, ctx) => {
-    send("AgentEnd", event, ctx, { last_assistant_message: lastAssistantMessage })
+    send("AgentEnd", event, ctx, { last_assistant_message: lastAssistantMessage, stop_error: lastStopError })
     lastAssistantMessage = ""
+    lastStopError = ""
   })
 
 
