@@ -3,9 +3,9 @@
 set -euo pipefail
 
 SETUP_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/dev-setup.sh"
-# Load the real functions without running the final main invocation.
+# The source guard keeps machine setup out of this test.
 # shellcheck disable=SC1090
-source <(head -n -1 "$SETUP_SCRIPT")
+source "$SETUP_SCRIPT"
 TEST_ROOT="$(mktemp -d)"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 
@@ -190,8 +190,8 @@ test_main_desktop_order_and_server_gates() {
     install_lazygit_linux install_lazydocker_linux install_firacode_nerd_font_linux setup_fd_symlink \
     install_tailscale install_oh_my_zsh install_nvm_node install_rust install_adaptive_brightness \
     install_hypruler_linux install_tree_sitter_cli install_pi install_plannotator install_tpm \
-    install_voxtype_linux install_omarchy_plugins_linux install_try_cli \
-    clone_dotfiles change_default_shell_to_zsh setup_postgres print_summary; do
+    install_voxtype_linux install_omarchy_plugins_linux install_try_cli install_caldir install_rencal \
+    clone_dotfiles setup_agent_skill_catalog change_default_shell_to_zsh setup_postgres print_summary; do
     eval "$function_name() { printf '%s\\n' '$function_name' >>\"\$COMMAND_LOG\"; }"
   done
   detect_os() {

@@ -16,6 +16,11 @@ HYPRULER_REPO="https://github.com/t4t5/hypruler.git"
 HYPRULER_DIR="$HOME/.local/src/hypruler"
 WLUMA_VERSION="4.11.1"
 WLUMA_DIR="$HOME/.local/src/wluma-$WLUMA_VERSION"
+AGENT_SKILL_SOURCES_DIR="$HOME/.local/share/agent-sources"
+AGENT_SKILLS_DIR="$HOME/.agents/skills"
+CURSOR_PLUGINS_REPO="https://github.com/cursor/plugins.git"
+MATTPOCOCK_SKILLS_REPO="https://github.com/mattpocock/skills.git"
+AGENT_SKILLS_ONLY=false
 SETUP_PROFILE="personal"
 
 #######################################
@@ -34,12 +39,17 @@ is_server() { [[ "$SETUP_PROFILE" == "server" ]]; }
 
 usage() {
   cat <<'EOF'
-Usage: bash dev-setup.sh [--server]
+Usage: bash dev-setup.sh [--server] [--agent-skills-only]
 
 Profiles:
   personal  Default. Installs the complete local development environment.
   --server  Linux SSH development server. Skips Voxtype, Omarchy plugins,
             desktop audio/input dependencies, brightness tools, and local fonts.
+
+Options:
+  --agent-skills-only  Only clone/reuse upstream skill sources and link the
+                      pstack/, cursor/, and mattpocock/ groups. Requires Git.
+                      Does not restore owned skills/dotfiles or migrate old copies.
 EOF
 }
 
@@ -48,6 +58,9 @@ parse_args() {
     case "$1" in
     --server)
       SETUP_PROFILE="server"
+      ;;
+    --agent-skills-only)
+      AGENT_SKILLS_ONLY=true
       ;;
     -h | --help)
       usage
@@ -873,6 +886,16 @@ change_default_shell_to_zsh() {
 
 clone_dotfiles() {
   if [[ -d "$DOTFILES_DIR" ]]; then
+    local tracked_changes
+    if ! tracked_changes="$(git --git-dir="$DOTFILES_DIR/" --work-tree="$HOME" status --porcelain --untracked-files=no)"; then
+      err "Cannot inspect existing dotfiles; refusing checkout: $DOTFILES_DIR"
+      return 1
+    fi
+    if [[ -n "$tracked_changes" ]]; then
+      err "Dotfiles have uncommitted tracked changes; refusing forced checkout."
+      err "Review and save them first, or use --agent-skills-only without restoring dotfiles."
+      return 1
+    fi
     log "Dotfiles bare repo already exists at $DOTFILES_DIR"
   else
     log "Cloning bare dotfiles repo"
@@ -901,6 +924,133 @@ clone_dotfiles() {
   "$git_bin" --git-dir="$DOTFILES_DIR/" --work-tree="$HOME" config status.showUntrackedFiles no
 
   append_line_if_missing "alias dotfiles='$git_bin --git-dir=\$HOME/.dotfiles/ --work-tree=\$HOME'" "$HOME/.zshrc"
+}
+
+# Clone missing skill sources; never pull, reset, or switch an existing checkout.
+clone_agent_skill_source() {
+  local repo="$1" destination="$2" origin
+
+  if [[ -e "$destination" || -L "$destination" ]]; then
+    if [[ -L "$destination" || ! -e "$destination/.git" ]]; then
+      err "Agent skill source is not a regular Git checkout: $destination"
+      return 1
+    fi
+    if ! origin="$(git -C "$destination" config --get remote.origin.url)" ||
+      [[ "${origin%.git}" != "${repo%.git}" ]]; then
+      err "Agent skill source has an unexpected origin; leaving it untouched: $destination"
+      return 1
+    fi
+    log "Reusing agent skill source (no pull or reset): $destination"
+    return
+  fi
+
+  mkdir -p "$(dirname "$destination")"
+  log "Cloning agent skill source: $repo"
+  git clone -- "$repo" "$destination"
+}
+
+# Preflight a generated skill link without replacing a file, directory, or wrong link.
+validate_agent_skill_link() {
+  local source="$1" destination="$2"
+
+  if [[ ! -d "$source" ]]; then
+    err "Agent skill source directory is missing: $source"
+    return 1
+  fi
+  if [[ -L "$destination" ]]; then
+    if [[ ! "$destination" -ef "$source" ]]; then
+      err "Agent skill link points elsewhere; leaving it untouched: $destination"
+      return 1
+    fi
+  elif [[ -e "$destination" ]]; then
+    err "Agent skill link would replace existing content; leaving it untouched: $destination"
+    return 1
+  fi
+}
+
+# Expose the full P Stack tree and only the selected Cursor/Matt skills.
+setup_agent_skill_catalog() {
+  local cursor_dir="$AGENT_SKILL_SOURCES_DIR/cursor-plugins"
+  local matt_dir="$AGENT_SKILL_SOURCES_DIR/mattpocock-skills"
+  local source destination group index
+  local skill_links=(
+    "pstack" "$cursor_dir/pstack/skills"
+    "cursor/deslop" "$cursor_dir/cursor-team-kit/skills/deslop"
+    "cursor/control-cli" "$cursor_dir/cursor-team-kit/skills/control-cli"
+    "cursor/control-ui" "$cursor_dir/cursor-team-kit/skills/control-ui"
+    "mattpocock/grilling" "$matt_dir/skills/productivity/grilling"
+    "mattpocock/grill-me" "$matt_dir/skills/productivity/grill-me"
+    "mattpocock/grill-with-docs" "$matt_dir/skills/engineering/grill-with-docs"
+    "mattpocock/domain-modeling" "$matt_dir/skills/engineering/domain-modeling"
+    "mattpocock/code-review" "$matt_dir/skills/engineering/code-review"
+    "mattpocock/writing-for-agents" "$matt_dir/skills/productivity/writing-for-agents"
+    "mattpocock/writing-beats" "$matt_dir/skills/in-progress/writing-beats"
+    "mattpocock/writing-fragments" "$matt_dir/skills/in-progress/writing-fragments"
+    "mattpocock/writing-shape" "$matt_dir/skills/in-progress/writing-shape"
+  )
+
+  if ! have git; then
+    err "Agent skill setup requires Git; install Git before using --agent-skills-only."
+    return 1
+  fi
+  clone_agent_skill_source "$CURSOR_PLUGINS_REPO" "$cursor_dir" || return 1
+  clone_agent_skill_source "$MATTPOCOCK_SKILLS_REPO" "$matt_dir" || return 1
+
+  if [[ ! -f "$cursor_dir/pstack/skills/poteto-mode/SKILL.md" ||
+    -f "$cursor_dir/pstack/skills/SKILL.md" ]]; then
+    err "Agent skill source does not contain the expected P Stack collection: $cursor_dir"
+    return 1
+  fi
+  for source in "$cursor_dir/pstack/skills/"*; do
+    if [[ -f "$source/SKILL.md" && -f "$AGENT_SKILLS_DIR/${source##*/}/SKILL.md" ]]; then
+      err "Agent skill legacy flat copy still exists; migrate dotfiles first: $AGENT_SKILLS_DIR/${source##*/}"
+      return 1
+    fi
+  done
+  for group in cursor mattpocock; do
+    destination="$AGENT_SKILLS_DIR/$group"
+    if [[ -L "$destination" || ( -e "$destination" && ! -d "$destination" ) ||
+      -f "$destination/SKILL.md" ]]; then
+      err "Agent skill group must be a real grouping directory: $destination"
+      return 1
+    fi
+  done
+
+  # Validate every link before creating any catalog links.
+  for ((index = 0; index < ${#skill_links[@]}; index += 2)); do
+    destination="$AGENT_SKILLS_DIR/${skill_links[index]}"
+    source="${skill_links[index + 1]}"
+    if ((index > 0)); then
+      if [[ ! -f "$source/SKILL.md" ]]; then
+        err "Agent skill source is missing SKILL.md: $source"
+        return 1
+      fi
+      if [[ -f "$AGENT_SKILLS_DIR/${source##*/}/SKILL.md" ]]; then
+        err "Agent skill legacy flat copy still exists; migrate dotfiles first: $AGENT_SKILLS_DIR/${source##*/}"
+        return 1
+      fi
+    fi
+    validate_agent_skill_link "$source" "$destination" || return 1
+  done
+
+  for ((index = 0; index < ${#skill_links[@]}; index += 2)); do
+    destination="$AGENT_SKILLS_DIR/${skill_links[index]}"
+    source="${skill_links[index + 1]}"
+    if [[ ! -L "$destination" ]]; then
+      mkdir -p "$(dirname "$destination")" || return 1
+      ln -s "$source" "$destination" || return 1
+    fi
+  done
+  # Pi honors catalog .gitignore files; keep generated-link exclusions in Git metadata.
+  if [[ -d "$DOTFILES_DIR" ]] &&
+    [[ "$(git --git-dir="$DOTFILES_DIR" rev-parse --is-bare-repository 2>/dev/null)" == true ]]; then
+    local pattern
+    for pattern in /.agents/skills/pstack /.agents/skills/cursor/ /.agents/skills/mattpocock/ /.local/share/agent-sources/; do
+      append_line_if_missing "$pattern" "$DOTFILES_DIR/info/exclude"
+    done
+  fi
+  log "Upstream agent skill groups linked: pstack/, cursor/, mattpocock/"
+  log "Owned skills come from dotfiles; reload Pi after reviewing the catalog."
 }
 
 setup_postgres() {
@@ -961,6 +1111,7 @@ Installed / configured:
   - postgres
   - neovim
   - bare dotfiles checkout
+  - grouped upstream agent skills: pstack/, cursor/, mattpocock/
 EOF
 
   if is_server; then
@@ -1055,6 +1206,10 @@ EOF
 #######################################
 main() {
   parse_args "$@"
+  if [[ "$AGENT_SKILLS_ONLY" == true ]]; then
+    setup_agent_skill_catalog
+    return
+  fi
   detect_os
 
   if is_server && [[ "$OS" != "linux" ]]; then
@@ -1103,6 +1258,7 @@ main() {
     install_rencal
   fi
   clone_dotfiles
+  setup_agent_skill_catalog
   if [[ "$OS" == "linux" ]] && ! is_server; then
     install_voxtype_linux
     install_omarchy_plugins_linux
@@ -1112,4 +1268,6 @@ main() {
   print_summary
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
