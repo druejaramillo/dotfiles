@@ -13,8 +13,15 @@ if [[ $input =~ $pi_command_pattern ]]; then
   exit 0
 fi
 
-# Load OpenAI API key from local .env file
-[ -f .env ] && set -a && source .env && set +a
+# Resolve credentials beside this script, independent of the daemon's working directory.
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -f "$script_dir/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$script_dir/.env"
+  set +a
+fi
+: "${OPENAI_API_KEY:?Voxtype cleanup: set OPENAI_API_KEY in .env beside gpt-cleanup.sh}"
 
 model="${OPENAI_MODEL:-gpt-6-luna}"
 
@@ -60,9 +67,19 @@ payload=$(jq -n \
   --arg input "$input" \
   '{model: $model, instructions: $instructions, input: $input}')
 
-response=$(curl --fail-with-body --silent --show-error https://api.openai.com/v1/responses \
+response=$(curl --fail-with-body --silent --show-error \
+  --connect-timeout 5 --max-time 25 https://api.openai.com/v1/responses \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -d "$payload")
 
-printf '%s\n' "$response" | jq -er '.output_text'
+# Raw Responses API replies nest generated text inside message content blocks.
+printf '%s\n' "$response" | jq -er '
+  [.output[]?
+    | select(.type == "message")
+    | .content[]?
+    | select(.type == "output_text")
+    | .text]
+  | join("\n")
+  | select(length > 0)
+'
