@@ -706,8 +706,19 @@ function handleEvent(payload: HookPayload): void {
   }
 }
 
+// capPreview mirrors the Go hook's truncate(preview, 8 KiB): UTF-8 bytes,
+// cut on a rune boundary, "…" appended within the cap.
+function capPreview(preview: string): string {
+  const bytes = new TextEncoder().encode(preview)
+  if (bytes.length <= 8192) return preview
+  let cut = 8192 - 3
+  while (cut > 0 && (bytes[cut] & 0xC0) === 0x80) cut--
+  return new TextDecoder().decode(bytes.subarray(0, cut)) + "…"
+}
+
 // askQuestions is the in-module port of interactivePromptQuestions in
-// internal/cli/hook_interactive_prompt.go, over OMP's ask arguments.
+// internal/cli/hook_interactive_prompt.go, over OMP's ask arguments and
+// Senpi's ask-user questions.
 function askQuestions(input: unknown): Array<Record<string, unknown>> {
   const record = input && typeof input === "object" ? input as Record<string, unknown> : {}
   const out: Array<Record<string, unknown>> = []
@@ -723,8 +734,13 @@ function askQuestions(input: unknown): Array<Record<string, unknown>> {
       const o = option as Record<string, unknown>
       const label = firstString(o.label)
       if (!label) continue
-      options.push({ label, description: firstString(o.description) })
-      if (firstString(o.preview)) hasPreview = true
+      const opt: Record<string, unknown> = { label, description: firstString(o.description) }
+      const preview = firstString(o.preview)
+      if (preview) {
+        opt.preview = capPreview(preview)
+        hasPreview = true
+      }
+      options.push(opt)
     }
     const entry: Record<string, unknown> = {
       header: firstString(q.header),
