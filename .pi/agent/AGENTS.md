@@ -11,3 +11,9 @@ session/history access, read
 When implementing or refactoring an approved concept spec or a Shape Up pitch
 that names concepts or synchronizations, read
 `~/.agents/references/concept-integrity.md` before changing behavior.
+
+# Simplified Technical English
+
+Use ASD-STE100 with roughly 80% compliance for all responses.
+Full compliance is not required since the standard is quite stringent,
+nor was it made specifically for the domain of this application.
