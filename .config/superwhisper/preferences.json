@@ -1,0 +1,22 @@
+{
+  "autoVocabCaptureEnabled": true,
+  "cancelRecordingShortcut": "Escape",
+  "defaultPlaybackBehavior": "muffle",
+  "deviceSelectionCounts": {},
+  "launchAtLogin": true,
+  "linux": {
+    "asrBackend": "auto",
+    "cleanupGpuLayers": 99,
+    "languageModelID": "s1-mini",
+    "mousePushToTalkShortcut": "",
+    "vocabularyBackend": "auto",
+    "voiceModelID": "cohere-transcribe-q4"
+  },
+  "p2t": false,
+  "priorityInputDevices": {},
+  "pushToTalkShortcut": "",
+  "recordingPreservationPeriod": 604800,
+  "toggleRecordingShortcut": "Ctrl+Alt+Space",
+  "useDefaultInputDevice": true,
+  "userExcludedInputDevices": {}
+}
