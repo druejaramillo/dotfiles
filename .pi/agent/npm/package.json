@@ -2,12 +2,12 @@
   "name": "pi-extensions",
   "private": true,
   "dependencies": {
-    "@monotykamary/pi-better-openai": "^0.3.3",
+    "@monotykamary/pi-better-openai": "^0.3.7",
     "@nicknisi/pi-cloak": "^0.2.0",
-    "@plannotator/pi-extension": "^0.28.42",
+    "@plannotator/pi-extension": "^0.28.61",
     "node-gyp": "^13.0.2",
-    "pi-knowledge": "^0.12.0",
-    "pi-web-access": "^0.46.0"
+    "pi-knowledge": "^0.14.0",
+    "pi-web-access": "^0.47.0"
   },
   "overrides": {
     "@monotykamary/pi-better-openai": {
