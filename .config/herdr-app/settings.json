@@ -1,0 +1,9 @@
+{
+  "zoom": 1.0,
+  "sounds": {
+    "enabled": false
+  },
+  "pane_scrollbars": false,
+  "font_ligatures": false,
+  "minimum_contrast": 1.0
+}
