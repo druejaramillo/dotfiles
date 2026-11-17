@@ -9,6 +9,7 @@ surface_dim = "black"
 
 [terminal]
 new_cwd = "follow"
+shell_mode = "login"
 
 [keys]
 prefix = "ctrl+space"
