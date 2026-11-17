@@ -6,7 +6,6 @@
     "@nicknisi/pi-cloak": "^0.2.0",
     "@plannotator/pi-extension": "^0.28.67",
     "node-gyp": "^13.0.2",
-    "pi-knowledge": "^0.15.0",
     "pi-web-access": "^0.48.0"
   },
   "overrides": {

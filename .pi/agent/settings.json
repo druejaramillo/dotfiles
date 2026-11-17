@@ -8,7 +8,6 @@
     "npm:@plannotator/pi-extension",
     "npm:@nicknisi/pi-cloak",
     "npm:pi-web-access",
-    "npm:pi-knowledge",
     "npm:@monotykamary/pi-better-openai",
     "git:github.com/druejaramillo/pi-auto-perms"
   ],
@@ -60,8 +59,8 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "extensionChangelogVersions": {
-    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.47.0",
-    "{\"source\":\"npm:pi-knowledge\",\"scope\":\"user\"}": "0.14.0",
+    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.48.0",
+    "{\"source\":\"npm:pi-knowledge\",\"scope\":\"user\"}": "0.15.0",
     "{\"source\":\"npm:@monotykamary/pi-better-openai\",\"scope\":\"user\"}": "0.3.7"
   }
 }
