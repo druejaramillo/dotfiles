@@ -19,32 +19,30 @@
       ],
       "centerEnd": [
         {
+          "id": "omarchy.elsewhen",
           "cities": [
             {
               "name": "Denver",
               "zone": "America/Denver"
             },
             {
-              "name": "Sao Paulo",
-              "zone": "America/Sao_Paulo"
+              "name": "North Platte",
+              "zone": "America/Chicago",
+              "lat": 41.12389,
+              "lon": -100.76542,
+              "region": "Nebraska, US"
             },
             {
-              "name": "London",
-              "zone": "Europe/London"
-            },
-            {
-              "name": "Dubai",
-              "zone": "Asia/Dubai"
-            },
-            {
-              "name": "Tokyo",
-              "zone": "Asia/Tokyo"
+              "name": "Naalehu",
+              "zone": "Pacific/Honolulu",
+              "lat": 19.06759,
+              "lon": -155.57983,
+              "region": "Hawaii, US"
             }
           ],
+          "units": "F",
           "hour24": true,
-          "id": "omarchy.elsewhen",
-          "offsetMode": "home",
-          "units": "F"
+          "offsetMode": "home"
         },
         {
           "id": "omarchy.weather"
